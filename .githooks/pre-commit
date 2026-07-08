@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if git diff --cached --name-only | grep -q "^packages/core/"; then
+  just core-check
+fi
+
+if git diff --cached --name-only | grep -qE "^(CLAUDE|AGENTS)\.md$"; then
+  just _check-agents-sync
+fi

@@ -1,0 +1,19 @@
+// Domain barrel: the consumer-facing pure helpers that narrow raw API shapes
+// into display forms and run the tool-layer selection/aggregation logic. Exposed
+// as the `@vrc-toolkit/core/domain` subpath.
+
+export * from "./avatars";
+export * from "./crop";
+export * from "./dates";
+export * from "./files";
+export * from "./friends";
+export * from "./http";
+export * from "./images";
+export * from "./notes";
+export * from "./preprocess";
+export * from "./presence";
+export * from "./prints";
+export * from "./query";
+export * from "./stats";
+export * from "./status";
+export * from "./visits";

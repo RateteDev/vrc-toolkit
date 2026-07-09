@@ -42,7 +42,7 @@ describe("sessionTransport", () => {
     expect(calls[0]?.init?.credentials).toBe("include");
   });
 
-  test("honors a base URL override", async () => {
+  test("applies a base URL override", async () => {
     const calls = captureFetch();
     await sessionTransport({ baseUrl: "http://localhost:8787/api/1" }).fetch("/friends");
     expect(calls[0]?.url).toBe("http://localhost:8787/api/1/friends");

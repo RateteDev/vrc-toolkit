@@ -8,6 +8,7 @@ import {
 } from "@vrc-toolkit/core/domain";
 import { useEffect, useState } from "react";
 import { useVrc } from "../../vrc";
+import { cssUrl } from "../cssUrl";
 
 const INV_TABS: { value: InventoryType; label: string }[] = [
   { value: "sticker", label: "ステッカー" },
@@ -151,7 +152,7 @@ export function StickerInventoryCard({
           <div className="acard" key={item.id || `${invType}-${index}`}>
             <div
               className="athumb"
-              style={item.imageUrl ? { backgroundImage: `url("${item.imageUrl}")` } : undefined}
+              style={item.imageUrl ? { backgroundImage: cssUrl(item.imageUrl) } : undefined}
             />
             <div className="abody">
               <div className="aname">{item.name || "（名前なし）"}</div>

@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { PasteHandler } from "../../Layout";
 import { useVrc } from "../../vrc";
+import { cssUrl } from "../cssUrl";
 import { CropModal } from "./CropModal";
 import { cropToPrintBlob, PRINT_ASPECT } from "./canvas";
 import { errorMessage } from "./errorMessage";
@@ -223,7 +224,7 @@ export function UploadSection({ onUploaded, onPasteRef }: Props) {
                   style={
                     it.natW
                       ? cropThumbStyle(it, it.url, PRINT_ASPECT)
-                      : { backgroundImage: `url("${it.url}")` }
+                      : { backgroundImage: cssUrl(it.url) }
                   }
                 />
                 <button

@@ -2,6 +2,7 @@ import { VrcError } from "@vrc-toolkit/core";
 import { type AvatarSummary, fmtAvatar, fmtDate } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
 import { useVrc } from "../../vrc";
+import { cssUrl } from "../cssUrl";
 
 type ViewMode = "list" | "sm" | "lg";
 
@@ -95,7 +96,7 @@ export function AvatarsGrid() {
                 className="athumb"
                 style={
                   avatar.thumbnailImageUrl
-                    ? { backgroundImage: `url("${avatar.thumbnailImageUrl}")` }
+                    ? { backgroundImage: cssUrl(avatar.thumbnailImageUrl) }
                     : undefined
                 }
               >

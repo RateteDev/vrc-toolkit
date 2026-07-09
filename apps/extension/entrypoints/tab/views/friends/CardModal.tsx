@@ -1,6 +1,7 @@
 import { type Card, fmtCard } from "@vrc-toolkit/core/domain";
 import { useEffect, useState } from "react";
 import { useVrc } from "../../vrc";
+import { cssUrl } from "../cssUrl";
 import { renderMd } from "./markdown";
 
 type Phase = "idle" | "loading" | "loaded" | "error";
@@ -91,7 +92,7 @@ export function CardModal({
         <div className="card-head">
           <div
             className="card-avatar"
-            style={card?.imageUrl ? { backgroundImage: `url("${card.imageUrl}")` } : undefined}
+            style={card?.imageUrl ? { backgroundImage: cssUrl(card.imageUrl) } : undefined}
           />
           <div className="card-headtext">
             <h2 className="card-name">{headline}</h2>

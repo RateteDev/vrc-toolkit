@@ -1,4 +1,5 @@
 import { fmtDate, type PrintSummary } from "@vrc-toolkit/core/domain";
+import { cssUrl } from "../cssUrl";
 import { TrashIcon } from "./icons";
 
 interface Props {
@@ -14,7 +15,7 @@ export function PrintCard({ print, onDelete, deleting }: Props) {
     <div className={deleting ? "pcard removing" : "pcard"}>
       <div
         className="pthumb"
-        style={print.imageUrl ? { backgroundImage: `url("${print.imageUrl}")` } : undefined}
+        style={print.imageUrl ? { backgroundImage: cssUrl(print.imageUrl) } : undefined}
       />
       <div className="pover">
         {print.worldName ? <div className="pworld">{print.worldName}</div> : null}

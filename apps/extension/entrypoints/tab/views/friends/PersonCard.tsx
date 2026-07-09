@@ -1,4 +1,5 @@
 import { isJoinable, parseLocation } from "@vrc-toolkit/core/domain";
+import { cssUrl } from "../cssUrl";
 import type { Person } from "./people";
 
 // Presence dot color, keyed off VRChat's status string (ported verbatim from
@@ -25,6 +26,8 @@ export function PersonCard({
   if (!person.isOnline) {
     worldText = "オフライン";
   } else if (parsed.kind === "instance") {
+    // worldName is always null: core has no worlds namespace yet to resolve
+    // worldId → name. The old Worker did this server-side via GET /worlds/{id}.
     worldText = person.worldName || "ワールドに滞在中";
   } else if (parsed.kind === "private") {
     worldText = "プライベート";
@@ -46,7 +49,7 @@ export function PersonCard({
     >
       <div
         className="favatar"
-        style={person.imageUrl ? { backgroundImage: `url("${person.imageUrl}")` } : undefined}
+        style={person.imageUrl ? { backgroundImage: cssUrl(person.imageUrl) } : undefined}
       />
       <div className="fbody">
         <div className="fname">

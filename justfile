@@ -37,12 +37,44 @@ core-ci:
     just core-check
     just core-test
 
+# ─── Extension ───
+
+# Start the extension dev server (Chrome target)
+[group('Extension')]
+ext-dev:
+    cd apps/extension && bunx wxt
+
+# Build the extension for both Chrome (MV3) and Firefox (MV2)
+[group('Extension')]
+ext-build:
+    cd apps/extension && bunx wxt build -b chrome
+    cd apps/extension && bunx wxt build -b firefox
+
+# Run extension lint, format, and type checks without modifying files
+[group('Extension')]
+ext-check:
+    bunx biome check apps/extension
+    cd apps/extension && bunx wxt prepare
+    cd apps/extension && bunx tsc --noEmit
+
+# Run extension tests (skips cleanly until the first test file exists)
+[group('Extension')]
+ext-test:
+    cd apps/extension && if find . -type d \( -name node_modules -o -name .output -o -name .wxt \) -prune -o -type f \( -name '*.test.ts' -o -name '*.test.tsx' \) -print | grep -q .; then bun test; else echo "No extension tests yet; skipping."; fi
+
+# Run extension CI (check → test)
+[group('Extension')]
+ext-ci:
+    just ext-check
+    just ext-test
+
 # ─── CI ───
 
 # Run local CI (mirrors remote CI pipeline)
 ci-local:
     just _check-agents-sync
     just core-ci
+    just ext-ci
 
 [private]
 _check-agents-sync:

@@ -14,6 +14,10 @@ build/
 out/
 *.egg-info/
 
+# WXT (browser extension) generated dirs
+.wxt/
+.output/
+
 # ──────────────────────────────────────────────
 # Environment & secrets
 # ──────────────────────────────────────────────

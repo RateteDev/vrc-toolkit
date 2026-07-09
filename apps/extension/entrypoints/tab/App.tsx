@@ -44,7 +44,7 @@ function SessionGate() {
     return (
       <main className="wrap">
         <header className="site-header rise d1">
-          <span className="brand">VRC ToolKit</span>
+          <span className="brand">VRC Toolkit</span>
         </header>
         <h1 className="view-title rise d1">ログインが必要です</h1>
         <div className="card rise d2">

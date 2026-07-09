@@ -8,6 +8,11 @@ export interface AuthUserResponse {
   id?: string;
   displayName?: string;
   requiresTwoFactorAuth?: string[];
+  status?: string;
+  statusDescription?: string;
+  location?: string;
+  currentAvatarImageUrl?: string | null;
+  currentAvatarThumbnailImageUrl?: string | null;
 }
 
 export interface TwoFactorVerifyResponse {

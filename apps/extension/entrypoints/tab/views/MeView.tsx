@@ -1,5 +1,12 @@
-// Phase 3-3 fills this: status switching (5 presets + status text) and the
-// owned-avatars grid. StatsView is out of scope (history-dependent).
+import { AvatarsGrid } from "./me/AvatarsGrid";
+import { StatusCard } from "./me/StatusCard";
+
+// StatsView is out of scope (history-dependent, not ported).
 export function MeView() {
-  return null;
+  return (
+    <>
+      <StatusCard />
+      <AvatarsGrid />
+    </>
+  );
 }

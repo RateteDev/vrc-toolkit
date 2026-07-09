@@ -1,5 +1,19 @@
-// Phase 3-1 fills this: Print upload (drop zone + crop modal), gallery, and the
-// manage grid with retention policy. Uses the prints namespace and Canvas resize.
-export function PrintsView() {
-  return null;
+import { type MutableRefObject, useState } from "react";
+import type { PasteHandler } from "../Layout";
+import { ManageSection } from "./prints/ManageSection";
+import { UploadSection } from "./prints/UploadSection";
+
+interface PrintsViewProps {
+  onPasteRef: MutableRefObject<PasteHandler | null>;
+}
+
+export function PrintsView({ onPasteRef }: PrintsViewProps) {
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  return (
+    <>
+      <UploadSection onUploaded={() => setRefreshToken((n) => n + 1)} onPasteRef={onPasteRef} />
+      <ManageSection refreshToken={refreshToken} />
+    </>
+  );
 }

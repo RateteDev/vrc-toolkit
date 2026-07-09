@@ -1,8 +1,22 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FriendsView } from "./views/FriendsView";
 import { MeView } from "./views/MeView";
 import { PrintsView } from "./views/PrintsView";
 import { StickersView } from "./views/StickersView";
+
+function extractImageFiles(e: ClipboardEvent): File[] {
+  const cd = e.clipboardData;
+  if (!cd?.items) return [];
+  const out: File[] = [];
+  for (let i = 0; i < cd.items.length; i++) {
+    const item = cd.items[i];
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      const f = item.getAsFile();
+      if (f) out.push(f);
+    }
+  }
+  return out;
+}
 
 // The four sections and their per-view title/footer copy, ported verbatim from
 // the Worker UI (VIEW_TITLES / FOOTER_HINTS in the old client-script).
@@ -35,9 +49,34 @@ const TABS = [
 
 type ViewName = (typeof TABS)[number]["view"];
 
+export type PasteHandler = (files: File[]) => void;
+
 export function Layout() {
   const [activeView, setActiveView] = useState<ViewName>("prints");
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const printsPasteRef = useRef<PasteHandler | null>(null);
+  const stickersPasteRef = useRef<PasteHandler | null>(null);
+
+  useEffect(() => {
+    const handler = (e: ClipboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase() ?? "";
+      if (tag === "input" || tag === "textarea") return;
+      const files = extractImageFiles(e);
+      if (!files.length) return;
+      e.preventDefault();
+      if (activeView === "prints") {
+        printsPasteRef.current?.(files);
+      } else if (activeView === "images") {
+        stickersPasteRef.current?.(files);
+      } else {
+        setActiveView("prints");
+        printsPasteRef.current?.(files);
+      }
+    };
+    document.addEventListener("paste", handler);
+    return () => document.removeEventListener("paste", handler);
+  }, [activeView]);
 
   const active = TABS.find((tab) => tab.view === activeView) ?? TABS[0];
 
@@ -49,7 +88,7 @@ export function Layout() {
   return (
     <main className="wrap">
       <header className="site-header rise d1">
-        <span className="brand">VRC ToolKit</span>
+        <span className="brand">VRC Toolkit</span>
       </header>
       <h1 id="viewTitle" className="view-title rise d1">
         {active.title}
@@ -105,7 +144,7 @@ export function Layout() {
       </button>
 
       <section id="group-prints" hidden={activeView !== "prints"}>
-        <PrintsView />
+        <PrintsView onPasteRef={printsPasteRef} />
       </section>
       <section id="group-friends" hidden={activeView !== "friends"}>
         <FriendsView />
@@ -114,7 +153,7 @@ export function Layout() {
         <MeView />
       </section>
       <section id="group-images" hidden={activeView !== "images"}>
-        <StickersView />
+        <StickersView onPasteRef={stickersPasteRef} />
       </section>
 
       <footer className="rise d3">

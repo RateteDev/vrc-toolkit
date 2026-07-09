@@ -7,6 +7,8 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
+    name: "VRC Toolkit",
+    description: "VRChat の非公式 API を利用した個人向けツールキット。",
     action: {},
     host_permissions: ["https://vrchat.com/*"],
   },

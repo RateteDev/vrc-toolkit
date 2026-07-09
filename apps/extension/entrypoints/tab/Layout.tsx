@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FriendsView } from "./views/FriendsView";
 import { MeView } from "./views/MeView";
 import { PrintsView } from "./views/PrintsView";

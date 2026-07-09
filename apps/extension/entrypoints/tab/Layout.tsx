@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { FriendsView } from "./views/FriendsView";
+import { MeView } from "./views/MeView";
+import { PrintsView } from "./views/PrintsView";
+import { StickersView } from "./views/StickersView";
 
 // The four sections and their per-view title/footer copy, ported verbatim from
 // the Worker UI (VIEW_TITLES / FOOTER_HINTS in the old client-script).
@@ -100,11 +104,18 @@ export function Layout() {
         ☰
       </button>
 
-      {/* Empty tab panels; Phase 3 fills each section. */}
-      <section id="group-prints" hidden={activeView !== "prints"} />
-      <section id="group-friends" hidden={activeView !== "friends"} />
-      <section id="group-me" hidden={activeView !== "me"} />
-      <section id="group-images" hidden={activeView !== "images"} />
+      <section id="group-prints" hidden={activeView !== "prints"}>
+        <PrintsView />
+      </section>
+      <section id="group-friends" hidden={activeView !== "friends"}>
+        <FriendsView />
+      </section>
+      <section id="group-me" hidden={activeView !== "me"}>
+        <MeView />
+      </section>
+      <section id="group-images" hidden={activeView !== "images"}>
+        <StickersView />
+      </section>
 
       <footer className="rise d3">
         <span id="footerHint">{active.hint}</span>

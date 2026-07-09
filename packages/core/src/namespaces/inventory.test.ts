@@ -3,10 +3,10 @@ import { recorder, replyJson } from "./_testutil";
 import { InventoryResource } from "./inventory";
 
 describe("InventoryResource.list", () => {
-  test("GET /inventory?types=...&n=100&offset=0, returns the raw envelope", async () => {
+  test("no n/offset -> bare /inventory?types=..., returns the raw envelope", async () => {
     const { transport, calls } = recorder(replyJson({ data: [{ id: "inv_1" }], totalCount: 1 }));
     const res = await new InventoryResource(transport).list("sticker");
-    expect(calls[0]?.path).toBe("/inventory?types=sticker&n=100&offset=0");
+    expect(calls[0]?.path).toBe("/inventory?types=sticker");
     expect(res).toEqual({ data: [{ id: "inv_1" }], totalCount: 1 });
   });
 
@@ -14,5 +14,10 @@ describe("InventoryResource.list", () => {
     const { transport, calls } = recorder(replyJson({ data: [] }));
     await new InventoryResource(transport).list("emoji,sticker", { n: 50, offset: 50 });
     expect(calls[0]?.path).toBe("/inventory?types=emoji%2Csticker&n=50&offset=50");
+  });
+
+  test("a 200 with a non-JSON body yields null", async () => {
+    const { transport } = recorder(() => new Response("not json", { status: 200 }));
+    expect(await new InventoryResource(transport).list("sticker")).toBeNull();
   });
 });

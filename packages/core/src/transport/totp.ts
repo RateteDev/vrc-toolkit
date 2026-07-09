@@ -4,10 +4,20 @@
 
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
+// Strict RFC 4648 Base32 decode. Only the canonical alphabet plus trailing `=`
+// padding is accepted; anything else (unsupported characters, an empty
+// secret) fails loudly rather than silently dropping bytes from a malformed
+// TOTP secret.
 export function base32ToBytes(b32: string): Uint8Array {
-  const clean = b32.toUpperCase().replace(/[^A-Z2-7]/g, "");
+  if (b32.length === 0) {
+    throw new Error("base32ToBytes: secret must not be empty");
+  }
+  const withoutPadding = b32.toUpperCase().replace(/=+$/, "");
+  if (withoutPadding.length === 0 || !/^[A-Z2-7]+$/.test(withoutPadding)) {
+    throw new Error(`base32ToBytes: invalid Base32 secret: ${b32}`);
+  }
   let bits = "";
-  for (const ch of clean) {
+  for (const ch of withoutPadding) {
     const val = BASE32_ALPHABET.indexOf(ch);
     bits += val.toString(2).padStart(5, "0");
   }

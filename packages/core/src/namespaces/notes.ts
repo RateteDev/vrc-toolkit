@@ -1,9 +1,11 @@
 // Notes namespace: the account owner's per-user notes.
 
 import { VrcResource } from "../resource";
-import { paginateAll } from "./_shared";
+import { buildQuery, PAGE_SIZE, paginateAll } from "./_shared";
 
-export interface NoteTargetUser {
+// Raw* prefix avoids colliding with the differently-shaped UserNote/
+// NoteTargetUser in domain/notes.ts.
+export interface RawNoteTargetUser {
   id?: string;
   displayName?: string;
   currentAvatarThumbnailImageUrl?: string;
@@ -11,13 +13,13 @@ export interface NoteTargetUser {
 
 // A VRChat UserNote as returned by GET /userNotes. Each row embeds a targetUser
 // subset so a listing renders without an N+1 lookup.
-export interface UserNote {
+export interface RawUserNote {
   id?: string;
   userId?: string;
   targetUserId?: string;
   note?: string;
   createdAt?: string;
-  targetUser?: NoteTargetUser;
+  targetUser?: RawNoteTargetUser;
 }
 
 export interface UpsertNoteInput {
@@ -25,19 +27,21 @@ export interface UpsertNoteInput {
   note: string;
 }
 
-// VRChat caps `n` at 100; listAll pages with this size.
-const PAGE_SIZE = 100;
+export interface NotesListParams {
+  n?: number;
+  offset?: number;
+}
 
 export class NotesResource extends VrcResource {
-  // GET /userNotes — one page of the owner's notes (raw).
-  list(params: { n?: number; offset?: number } = {}): Promise<UserNote[]> {
-    const n = params.n ?? PAGE_SIZE;
-    const offset = params.offset ?? 0;
-    return this.requestArray<UserNote>(`/userNotes?n=${n}&offset=${offset}`);
+  // GET /userNotes — one page of the owner's notes (raw). Caller controls
+  // n/offset; when unspecified the API's own defaults apply.
+  list(params: NotesListParams = {}): Promise<RawUserNote[]> {
+    const query = buildQuery({ n: params.n, offset: params.offset });
+    return this.requestArray<RawUserNote>(`/userNotes${query}`);
   }
 
   // Page GET /userNotes to exhaustion (n=100). Multiple requests by design.
-  listAll(): Promise<UserNote[]> {
+  listAll(): Promise<RawUserNote[]> {
     return paginateAll(PAGE_SIZE, (offset) => this.list({ n: PAGE_SIZE, offset }));
   }
 

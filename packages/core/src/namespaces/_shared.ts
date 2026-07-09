@@ -3,6 +3,9 @@
 // strings and exhaust pages without depending on the consumer-facing domain
 // helpers.
 
+// VRChat caps `n` at 100 across list endpoints; listAll pages with this size.
+export const PAGE_SIZE = 100;
+
 // Build a query string: skip undefined values, URL-encode each key/value, and
 // prefix "?" only when non-empty. Enumeration order follows the object.
 export function buildQuery(params: Record<string, string | number | boolean | undefined>): string {

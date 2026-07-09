@@ -14,6 +14,11 @@ describe("AvatarsResource.list", () => {
     });
     expect(calls[0]?.path).toBe("/avatars?user=me&releaseStatus=all&n=100&offset=0");
   });
+
+  test("normalizes a non-array body to []", async () => {
+    const { transport } = recorder(replyJson(null));
+    expect(await new AvatarsResource(transport).list()).toEqual([]);
+  });
 });
 
 describe("AvatarsResource.listAll", () => {

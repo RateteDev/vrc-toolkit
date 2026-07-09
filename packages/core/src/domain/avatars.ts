@@ -1,5 +1,5 @@
-// Owned-avatar list helpers (spec No.22): exhaustive paging and raw->summary
-// narrowing. Pure: paginateAll is driven by an injected page fetcher.
+// Owned-avatar list helpers (spec No.22): raw->summary narrowing. Pagination
+// itself lives in namespaces/_shared.ts (the transport-facing layer).
 
 // UI-facing shape for an owned avatar (snake_case timestamps absorbed).
 export interface AvatarSummary {
@@ -19,27 +19,6 @@ export interface RawAvatar {
   thumbnailImageUrl?: string | null;
   created_at?: string;
   updated_at?: string;
-}
-
-// Drive offset/n paging to exhaustion. Pure w.r.t. the network: the caller
-// injects `fetchPage(offset)` which returns one page of items; paging advances
-// offset by `n` and stops once a page returns fewer than `n` items (the partial
-// final page, including an empty first page). Returns the concatenation of all
-// pages.
-export async function paginateAll<T>(
-  n: number,
-  fetchPage: (offset: number) => Promise<T[]> | T[],
-): Promise<T[]> {
-  const out: T[] = [];
-  let offset = 0;
-  for (;;) {
-    const page = await fetchPage(offset);
-    for (const item of page) {
-      out.push(item);
-    }
-    if (page.length < n) return out;
-    offset += n;
-  }
 }
 
 // Narrow a raw avatar object to AvatarSummary, absorbing snake_case

@@ -32,6 +32,20 @@ describe("base32ToBytes", () => {
     const bytes = base32ToBytes("gezdgnbvgy3tqojqgezdgnbvgy3tqojq====");
     expect(new TextDecoder().decode(bytes)).toBe(ASCII_SECRET);
   });
+
+  test("throws on an empty secret", () => {
+    expect(() => base32ToBytes("")).toThrow();
+  });
+
+  test("throws on characters outside the Base32 alphabet", () => {
+    // "0", "1", "8", "9" are not part of the RFC 4648 Base32 alphabet.
+    expect(() => base32ToBytes("GEZDGNBV1Y3TQOJQ")).toThrow();
+    expect(() => base32ToBytes("not-base32!")).toThrow();
+  });
+
+  test("throws when only padding remains after stripping", () => {
+    expect(() => base32ToBytes("========")).toThrow();
+  });
 });
 
 describe("hotp", () => {

@@ -1,7 +1,7 @@
 // Avatars namespace: list the account owner's avatars.
 
 import { VrcResource } from "../resource";
-import { buildQuery, paginateAll } from "./_shared";
+import { buildQuery, PAGE_SIZE, paginateAll } from "./_shared";
 
 // Raw avatar object from GET /avatars in list form (snake_case timestamps, no
 // top-level assetUrl). Only fields we surface are typed.
@@ -20,9 +20,6 @@ export interface AvatarsListParams {
   n?: number;
   offset?: number;
 }
-
-// VRChat caps `n` at 100; listAll pages with this size.
-const PAGE_SIZE = 100;
 
 export class AvatarsResource extends VrcResource {
   // GET /avatars — one page (raw). Caller controls user/releaseStatus/n/offset.

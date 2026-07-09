@@ -13,10 +13,14 @@ export interface CropGeom {
   ch: number;
   srcX: number;
   srcY: number;
+  // Re-clamped center, normalized to [0,1]. The caller decides whether/how to
+  // write this back onto its own CropItem; geom itself never mutates input.
+  ncx: number;
+  ncy: number;
 }
 
-// Crop geometry for aspect `a` (e.g. 16/9). Mutates it.ncx/it.ncy to re-clamp
-// the stored center into bounds (intentional, matches original behavior).
+// Crop geometry for aspect `a` (e.g. 16/9). Re-clamps the stored center into
+// bounds and returns the clamped ncx/ncy alongside the pixel geometry.
 export function geom(it: CropItem, a: number): CropGeom {
   let cw0: number;
   let ch0: number;
@@ -33,7 +37,5 @@ export function geom(it: CropItem, a: number): CropGeom {
   let cy = it.ncy * it.natH;
   cx = Math.min(it.natW - cw / 2, Math.max(cw / 2, cx));
   cy = Math.min(it.natH - ch / 2, Math.max(ch / 2, cy));
-  it.ncx = cx / it.natW;
-  it.ncy = cy / it.natH;
-  return { cw, ch, srcX: cx - cw / 2, srcY: cy - ch / 2 };
+  return { cw, ch, srcX: cx - cw / 2, srcY: cy - ch / 2, ncx: cx / it.natW, ncy: cy / it.natH };
 }

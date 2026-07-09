@@ -39,6 +39,16 @@ describe("VrcResource", () => {
     expect(await new Probe(transport).getArray("/friends")).toEqual([]);
   });
 
+  test("requestArray passes a real array body through unchanged", async () => {
+    const { transport } = stubTransport(
+      new Response('[{"id":"usr_1"},{"id":"usr_2"}]', { status: 200 }),
+    );
+    expect(await new Probe(transport).getArray<{ id: string }>("/friends")).toEqual([
+      { id: "usr_1" },
+      { id: "usr_2" },
+    ]);
+  });
+
   test("request surfaces upstream failures as VrcError with a derived message", async () => {
     const { transport } = stubTransport(new Response("{}", { status: 500 }));
     const err = (await new Probe(transport).get("/auth/user").catch((e) => e)) as VrcError;

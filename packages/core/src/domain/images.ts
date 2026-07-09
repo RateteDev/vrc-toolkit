@@ -2,7 +2,8 @@
 
 // VRChat image purpose tags accepted by POST /file/image. Static tags carry no
 // animation fields; the single animated tag ('emojianimated') requires them.
-export type ImageTag = "icon" | "gallery" | "sticker" | "emoji" | "emojianimated";
+export const IMAGE_TAGS = ["icon", "gallery", "sticker", "emoji", "emojianimated"] as const;
+export type ImageTag = (typeof IMAGE_TAGS)[number];
 
 // Animation fields, only valid (and required) when tag === 'emojianimated'.
 export interface ImageAnimation {
@@ -40,8 +41,7 @@ export function validateImageParams(input: ImageParamsInput): ValidatedImagePara
   if (input.mime !== "image/png") {
     throw new Error(`image MIME must be image/png: ${input.mime}`);
   }
-  const tags = ["icon", "gallery", "sticker", "emoji", "emojianimated"];
-  if (tags.indexOf(input.tag) < 0) {
+  if (!(IMAGE_TAGS as readonly string[]).includes(input.tag)) {
     throw new Error(`unknown image tag: ${input.tag}`);
   }
   if (input.tag !== "emojianimated") {

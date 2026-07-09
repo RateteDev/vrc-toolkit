@@ -2,16 +2,13 @@
 
 import { VrcResource } from "../resource";
 import type { VRChatFriend } from "../types";
-import { buildQuery, paginateAll } from "./_shared";
+import { buildQuery, PAGE_SIZE, paginateAll } from "./_shared";
 
 export interface FriendsListParams {
   offline?: boolean;
   n?: number;
   offset?: number;
 }
-
-// VRChat caps `n` at 100; listAll pages with this size.
-const PAGE_SIZE = 100;
 
 export class FriendsResource extends VrcResource {
   // GET /auth/user/friends. One request; the caller controls offline/n/offset.

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { VrcClient, VrcError } from "@vrc-toolkit/core";
-import { parseLocation, resolveThumbUrl, validateStatus } from "@vrc-toolkit/core/domain";
+import { fmtDate, parseLocation, validateStatus } from "@vrc-toolkit/core/domain";
 import { credentialsTransport } from "@vrc-toolkit/core/transport/credentials";
 import { sessionTransport } from "@vrc-toolkit/core/transport/session";
 
@@ -25,6 +25,6 @@ describe("subpath exports", () => {
   test("`./domain` exposes the pure helpers", () => {
     expect(parseLocation("offline")).toEqual({ kind: "offline" });
     expect(typeof validateStatus).toBe("function");
-    expect(typeof resolveThumbUrl).toBe("function");
+    expect(typeof fmtDate).toBe("function");
   });
 });

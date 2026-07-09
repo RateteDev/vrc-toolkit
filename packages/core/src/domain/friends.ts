@@ -2,7 +2,6 @@
 // friend-summary projection used by the dashboard.
 
 import type { VRChatFriend } from "../types";
-import { resolveThumbUrl } from "./files";
 
 export interface ParsedLocation {
   kind: "offline" | "private" | "traveling" | "instance";
@@ -139,6 +138,8 @@ export function toFriendSummary(f: VRChatFriend): FriendSummary {
     worldId: parsed.worldId ?? null,
     worldName: null,
     instanceId: parsed.instanceId ?? null,
-    imageUrl: resolveThumbUrl(thumb),
+    // Raw passthrough: the extension calls the API with the user's own
+    // session, so there is no same-origin proxy to route thumbnails through.
+    imageUrl: thumb,
   };
 }

@@ -1,6 +1,7 @@
 // Inventory namespace: list the account owner's owned inventory items.
 
 import { VrcResource } from "../resource";
+import { buildQuery } from "./_shared";
 
 // Raw /inventory data[] element. Field names are not fully confirmed against
 // the live API (open question), so it is tolerant of extra/missing fields.
@@ -26,18 +27,13 @@ export interface InventoryListParams {
   offset?: number;
 }
 
-// Spec No.25 lists inventory with n=100.
-const PAGE_SIZE = 100;
-
 export class InventoryResource extends VrcResource {
   // GET /inventory?types=...&n&offset. Returns the raw response envelope. `types`
   // is passed through verbatim (e.g. "sticker" | "emoji"); type validation is a
-  // domain concern, not done here. Single request.
+  // domain concern, not done here. n/offset are omitted when unspecified so the
+  // API's own defaults apply. Single request.
   list(types: string, params: InventoryListParams = {}): Promise<RawInventoryResponse | null> {
-    const n = params.n ?? PAGE_SIZE;
-    const offset = params.offset ?? 0;
-    return this.request<RawInventoryResponse>(
-      `/inventory?types=${encodeURIComponent(types)}&n=${n}&offset=${offset}`,
-    );
+    const query = buildQuery({ types, n: params.n, offset: params.offset });
+    return this.request<RawInventoryResponse>(`/inventory${query}`);
   }
 }

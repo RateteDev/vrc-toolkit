@@ -3,10 +3,16 @@ import { recorder, replyJson } from "./_testutil";
 import { PrintsResource } from "./prints";
 
 describe("PrintsResource.list", () => {
-  test("GET /prints/user/{userId}?n=100, url-encodes the id", async () => {
+  test("no params -> bare /prints/user/{userId}, url-encodes the id", async () => {
     const { transport, calls } = recorder(replyJson([]));
     await new PrintsResource(transport).list("usr_1");
-    expect(calls[0]?.path).toBe("/prints/user/usr_1?n=100");
+    expect(calls[0]?.path).toBe("/prints/user/usr_1");
+  });
+
+  test("builds the n/offset query string", async () => {
+    const { transport, calls } = recorder(replyJson([]));
+    await new PrintsResource(transport).list("usr_1", { n: 100, offset: 0 });
+    expect(calls[0]?.path).toBe("/prints/user/usr_1?n=100&offset=0");
   });
 
   test("normalizes a non-array body to []", async () => {
@@ -33,6 +39,7 @@ describe("PrintsResource.upload", () => {
     expect(String(form.get("timestamp"))).toMatch(/\.000Z$/);
     expect(form.has("note")).toBe(false);
     expect(form.has("worldId")).toBe(false);
+    expect(form.has("worldName")).toBe(false);
   });
 
   test("includes explicit timestamp/note/world fields when provided", async () => {

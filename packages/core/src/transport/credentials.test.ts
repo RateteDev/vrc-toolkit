@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { VrcError } from "../response";
-import { credentialsTransport } from "./credentials";
+import { type CredentialsTransportOptions, credentialsTransport } from "./credentials";
 
 const realFetch = globalThis.fetch;
 
@@ -113,5 +113,84 @@ describe("credentialsTransport", () => {
     await expect(
       credentialsTransport(CREDS, { userAgent: UA, baseUrl: BASE }),
     ).rejects.toBeInstanceOf(VrcError);
+  });
+
+  test("rejects a missing or empty userAgent at construction", async () => {
+    await expect(credentialsTransport(CREDS, { userAgent: "", baseUrl: BASE })).rejects.toThrow(
+      /userAgent/,
+    );
+    const optionsWithoutUserAgent = { baseUrl: BASE } as CredentialsTransportOptions;
+    await expect(credentialsTransport(CREDS, optionsWithoutUserAgent)).rejects.toThrow(/userAgent/);
+  });
+
+  test("preserves the raw response text in VrcError.body on a non-JSON login failure", async () => {
+    stubFetch(() => new Response("<html>502 Bad Gateway</html>", { status: 502 }));
+    const err = (await credentialsTransport(CREDS, { userAgent: UA, baseUrl: BASE }).catch(
+      (e) => e,
+    )) as VrcError;
+    expect(err).toBeInstanceOf(VrcError);
+    expect(err.body).toBe("<html>502 Bad Gateway</html>");
+  });
+
+  test("converts an upstream timeout into a 504 VrcError", async () => {
+    globalThis.fetch = ((_url: string, _init?: RequestInit) =>
+      Promise.reject(new DOMException("The operation timed out.", "TimeoutError"))) as typeof fetch;
+    const err = (await credentialsTransport(CREDS, { userAgent: UA, baseUrl: BASE }).catch(
+      (e) => e,
+    )) as VrcError;
+    expect(err).toBeInstanceOf(VrcError);
+    expect(err.status).toBe(504);
+  });
+
+  test("exportCookies returns cookies collected from login and subsequent responses", async () => {
+    stubFetch((url) => {
+      if (url.endsWith("/auth/user")) {
+        return jsonResponse({ requiresTwoFactorAuth: ["totp"] }, 200, ["auth=abc123; Path=/"]);
+      }
+      if (url.endsWith("/totp/verify")) {
+        return jsonResponse({ verified: true }, 200, ["twoFactorAuth=xyz789; Path=/"]);
+      }
+      return jsonResponse([], 200, ["session=zzz999; Path=/"]);
+    });
+    const transport = await credentialsTransport(CREDS, { userAgent: UA, baseUrl: BASE });
+    // Cookies from the Basic-auth and TOTP-verify legs of login are both present.
+    expect(transport.exportCookies()).toEqual({ auth: "abc123", twoFactorAuth: "xyz789" });
+
+    await transport.fetch("/friends");
+    // A Set-Cookie on a post-login response is folded in too.
+    expect(transport.exportCookies()).toEqual({
+      auth: "abc123",
+      twoFactorAuth: "xyz789",
+      session: "zzz999",
+    });
+  });
+
+  describe("seeded cookies", () => {
+    test("skips the login handshake and replays the seeded jar", async () => {
+      const calls = stubFetch(() => jsonResponse({ ok: true }, 200));
+      const transport = await credentialsTransport(CREDS, {
+        userAgent: UA,
+        baseUrl: BASE,
+        cookies: { auth: "seeded123" },
+      });
+      expect(calls).toHaveLength(0);
+
+      await transport.fetch("/auth/user");
+      expect(calls).toHaveLength(1);
+      expect(header(calls[0], "Cookie")).toBe("auth=seeded123");
+    });
+
+    test("exportCookies reflects the seeded jar plus any rotation from subsequent requests", async () => {
+      stubFetch(() => jsonResponse({ ok: true }, 200, ["auth=rotated; Path=/"]));
+      const transport = await credentialsTransport(CREDS, {
+        userAgent: UA,
+        baseUrl: BASE,
+        cookies: { auth: "seeded123" },
+      });
+      expect(transport.exportCookies()).toEqual({ auth: "seeded123" });
+
+      await transport.fetch("/auth/user");
+      expect(transport.exportCookies()).toEqual({ auth: "rotated" });
+    });
   });
 });

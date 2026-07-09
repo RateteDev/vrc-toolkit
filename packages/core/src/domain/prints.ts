@@ -2,7 +2,6 @@
 // (spec No.29). All pure over in-memory print data.
 
 import type { VRChatPrint } from "../types";
-import { toProxyImage } from "./files";
 
 // Minimal shape consumed by sortPrints (a Print summary subset).
 export interface SortablePrint {
@@ -31,15 +30,16 @@ export interface PrintSummary {
   imageUrl: string | null;
 }
 
-// Narrow a raw print object to the fields the UI needs. The VRChat file URL
-// needs auth, so we expose a same-origin proxy path instead.
-export function toSummary(p: VRChatPrint): PrintSummary {
+// Narrow a raw print object to the fields the UI needs. imageUrl is passed
+// through raw: the extension reuses the user's own vrchat.com session, so the
+// image URL needs no auth proxy.
+export function toPrintSummary(p: VRChatPrint): PrintSummary {
   return {
     id: p?.id ?? "",
     note: p?.note ?? null,
     worldName: p?.worldName ?? p?.world?.name ?? null,
     createdAt: p?.createdAt ?? p?.timestamp ?? null,
-    imageUrl: toProxyImage(p?.files?.image ?? p?.image ?? null),
+    imageUrl: p?.files?.image ?? p?.image ?? null,
   };
 }
 
@@ -51,7 +51,7 @@ export interface RetentionPolicy {
 }
 
 // Minimal shape needed to decide deletion: an id and a createdAt. This matches
-// the PrintSummary projection (toSummary) used by the gallery/preview path, so
+// the PrintSummary projection (toPrintSummary) used by the gallery/preview path, so
 // the `createdAt ?? timestamp` fallback is resolved before selection runs.
 export interface RotatablePrint {
   id?: string;

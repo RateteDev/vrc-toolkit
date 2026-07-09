@@ -1,19 +1,25 @@
 import { describe, expect, test } from "bun:test";
 import { recorder, replyJson } from "./_testutil";
-import type { UserNote } from "./notes";
+import type { RawUserNote } from "./notes";
 import { NotesResource } from "./notes";
 
 describe("NotesResource.list", () => {
-  test("GET /userNotes with n=100&offset=0 defaults", async () => {
+  test("no params -> bare /userNotes", async () => {
     const { transport, calls } = recorder(replyJson([]));
     await new NotesResource(transport).list();
+    expect(calls[0]?.path).toBe("/userNotes");
+  });
+
+  test("builds the n/offset query string", async () => {
+    const { transport, calls } = recorder(replyJson([]));
+    await new NotesResource(transport).list({ n: 100, offset: 0 });
     expect(calls[0]?.path).toBe("/userNotes?n=100&offset=0");
   });
 });
 
 describe("NotesResource.listAll", () => {
   test("pages with n=100 until a short page", async () => {
-    const fullPage: UserNote[] = Array.from({ length: 100 }, (_, i) => ({ id: `n${i}` }));
+    const fullPage: RawUserNote[] = Array.from({ length: 100 }, (_, i) => ({ id: `n${i}` }));
     const { transport, calls } = recorder(({ path }) => {
       const offset = new URL(`https://x${path}`).searchParams.get("offset");
       const body = offset === "0" ? fullPage : [{ id: "last" }];

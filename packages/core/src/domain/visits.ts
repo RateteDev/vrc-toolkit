@@ -40,6 +40,14 @@ export interface VisitReconcile {
   toContinue: number[];
 }
 
+// An observed presence known to be inside an instance (instanceId narrowed
+// from string | null to string).
+type ObservedInstanceVisit = ObservedVisit & { instanceId: string };
+
+function hasInstance(o: ObservedVisit): o is ObservedInstanceVisit {
+  return o.instanceId !== null;
+}
+
 // PURE: reconcile open intervals against the current observations at time `now`.
 // An open interval continues when the same subject is still observed in the
 // SAME world_id:instance_id; otherwise it closes. A freshly observed instance
@@ -51,9 +59,9 @@ export function reconcileVisits(
   observed: ObservedVisit[],
   now: string,
 ): VisitReconcile {
-  const observedByKey = new Map<string, ObservedVisit>();
+  const observedByKey = new Map<string, ObservedInstanceVisit>();
   for (const o of observed) {
-    if (o.instanceId === null) continue;
+    if (!hasInstance(o)) continue;
     observedByKey.set(visitKey(o.subjectId, o.worldId, o.instanceId), o);
   }
 
@@ -77,7 +85,7 @@ export function reconcileVisits(
       subjectId: o.subjectId,
       worldId: o.worldId,
       worldName: o.worldName,
-      instanceId: o.instanceId as string,
+      instanceId: o.instanceId,
       instanceType: o.instanceType,
       region: o.region,
       enteredAt: now,

@@ -1,9 +1,8 @@
 // Unit tests for the friends pure helpers (spec No.1 + No.2): parseLocation,
-// instanceType, parseRegion, isJoinable, pickThumb, resolveThumbUrl and the
-// toFriendSummary projection. Network-free.
+// instanceType, parseRegion, isJoinable, pickThumb and the toFriendSummary
+// projection. Network-free.
 
 import { describe, expect, it } from "bun:test";
-import { resolveThumbUrl } from "./files";
 import {
   instanceType,
   isJoinable,
@@ -188,28 +187,6 @@ describe("pickThumb", () => {
   });
 });
 
-describe("resolveThumbUrl", () => {
-  it("rewrites a VRChat file-hosted thumbnail to the same-origin proxy path", () => {
-    expect(resolveThumbUrl("https://api.vrchat.cloud/api/1/file/file_abc-123/2/file")).toBe(
-      "/api/file/file_abc-123/2",
-    );
-  });
-
-  it("falls back to the raw https URL when it is not file-id-shaped", () => {
-    expect(resolveThumbUrl("https://cdn.example.com/avatars/x.png")).toBe(
-      "https://cdn.example.com/avatars/x.png",
-    );
-  });
-
-  it("rejects a non-https override URL", () => {
-    expect(resolveThumbUrl("http://insecure.example.com/x.png")).toBeNull();
-  });
-
-  it("returns null for null input", () => {
-    expect(resolveThumbUrl(null)).toBeNull();
-  });
-});
-
 describe("toFriendSummary", () => {
   it("shapes an instance friend; worldName is left null for listFriends to fill", () => {
     const s = toFriendSummary({
@@ -230,7 +207,8 @@ describe("toFriendSummary", () => {
       worldId: "wrld_x",
       worldName: null,
       instanceId: "12345~hidden(usr_a)~region(eu)",
-      imageUrl: "/api/file/file_abc/1",
+      // Raw passthrough: no same-origin proxy in the extension architecture.
+      imageUrl: "https://api.vrchat.cloud/api/1/file/file_abc/1/file",
     });
   });
 

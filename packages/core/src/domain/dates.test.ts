@@ -2,8 +2,12 @@ import { describe, expect, it } from "bun:test";
 import { fmtDate } from "./dates";
 
 describe("fmtDate", () => {
-  it("formats a valid ISO string to YYYY/MM/DD with zero-padding", () => {
-    expect(fmtDate("2026-01-05T00:00:00.000Z")).toBe("2026/01/05");
+  it("formats a valid date to YYYY/MM/DD with zero-padding", () => {
+    // fmtDate reads local-time getters, so build the input from local
+    // components (not a UTC instant); the round trip through ISO and back
+    // preserves the local wall-clock date under any TZ.
+    const d = new Date(2026, 0, 5);
+    expect(fmtDate(d.toISOString())).toBe("2026/01/05");
   });
 
   it("returns '' for falsy input", () => {

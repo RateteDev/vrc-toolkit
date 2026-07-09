@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { VrcError } from "../response";
 import { sessionTransport } from "./session";
 
 const realFetch = globalThis.fetch;
@@ -38,6 +39,7 @@ describe("sessionTransport", () => {
       body: JSON.stringify({ note: "hi" }),
     });
     expect(calls[0]?.init?.method).toBe("POST");
+    expect(new Headers(calls[0]?.init?.headers).get("Content-Type")).toBe("application/json");
     expect(calls[0]?.init?.body).toBe(JSON.stringify({ note: "hi" }));
     expect(calls[0]?.init?.credentials).toBe("include");
   });
@@ -46,5 +48,15 @@ describe("sessionTransport", () => {
     const calls = captureFetch();
     await sessionTransport({ baseUrl: "http://localhost:8787/api/1" }).fetch("/friends");
     expect(calls[0]?.url).toBe("http://localhost:8787/api/1/friends");
+  });
+
+  test("converts an upstream timeout into a 504 VrcError", async () => {
+    globalThis.fetch = ((_url: string, _init?: RequestInit) =>
+      Promise.reject(new DOMException("The operation timed out.", "TimeoutError"))) as typeof fetch;
+    const err = (await sessionTransport()
+      .fetch("/auth/user")
+      .catch((e) => e)) as VrcError;
+    expect(err).toBeInstanceOf(VrcError);
+    expect(err.status).toBe(504);
   });
 });

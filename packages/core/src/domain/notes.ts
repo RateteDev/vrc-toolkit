@@ -59,8 +59,9 @@ export function mergeNotesWithTags(notes: UserNote[], tagRows: NoteTagRow[]): No
 }
 
 // Format a UserNote for display; falls back to the bare targetUserId when the
-// embedded targetUser (or its displayName) is missing.
-export function fmtNote(note: UserNote): NoteView {
+// embedded targetUser (or its displayName) is missing. Accepts either a bare
+// UserNote or one already merged with local tags (mergeNotesWithTags' output).
+export function fmtNote(note: UserNote | NoteWithTags): NoteView {
   const target = note.targetUser;
   const displayName = target?.displayName ? target.displayName : note.targetUserId;
   const thumbnailImageUrl = target?.currentAvatarThumbnailImageUrl
@@ -71,7 +72,7 @@ export function fmtNote(note: UserNote): NoteView {
     displayName,
     thumbnailImageUrl,
     note: note.note,
-    localTags: (note as NoteWithTags).localTags ? (note as NoteWithTags).localTags : [],
+    localTags: "localTags" in note ? note.localTags : [],
   };
 }
 

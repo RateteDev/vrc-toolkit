@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "bun:test";
 import type { VRChatPrint } from "../types";
-import { type RotatablePrint, selectPrintsToDelete, toSummary } from "./prints";
+import { type RotatablePrint, selectPrintsToDelete, toPrintSummary } from "./prints";
 
 const NOW = new Date("2024-06-01T00:00:00.000Z");
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -89,17 +89,18 @@ describe("selectPrintsToDelete", () => {
     expect(selectPrintsToDelete([], { keepLatest: 5, maxAgeDays: 30 }, NOW)).toEqual([]);
   });
 
-  // Lock the preview-vs-execution symmetry: rotate() selects over toSummary(raw),
-  // and toSummary derives createdAt as `createdAt ?? timestamp`. A raw print dated
-  // ONLY via `timestamp` must therefore be selectable by the server exactly as the
-  // gallery/preview shows it, not silently kept. (Mirrors rotate()'s projection.)
-  it("selects a print dated only via `timestamp` after toSummary projection", () => {
+  // Lock the preview-vs-execution symmetry: rotate() selects over
+  // toPrintSummary(raw), and toPrintSummary derives createdAt as
+  // `createdAt ?? timestamp`. A raw print dated ONLY via `timestamp` must
+  // therefore be selectable by the server exactly as the gallery/preview shows
+  // it, not silently kept. (Mirrors rotate()'s projection.)
+  it("selects a print dated only via `timestamp` after toPrintSummary projection", () => {
     const oldIso = new Date(NOW.getTime() - 999 * DAY_MS).toISOString();
     const raw: VRChatPrint[] = [
       { id: "ts-only", timestamp: oldIso },
       { id: "dated", createdAt: agePrint("dated", 1).createdAt as string },
     ];
-    const ids = selectPrintsToDelete(raw.map(toSummary), { maxAgeDays: 30 }, NOW);
+    const ids = selectPrintsToDelete(raw.map(toPrintSummary), { maxAgeDays: 30 }, NOW);
     expect(ids).toEqual(["ts-only"]);
   });
 });

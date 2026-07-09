@@ -2,6 +2,7 @@
 
 import { VrcResource } from "../resource";
 import type { PrintUploadResponse, VRChatPrint } from "../types";
+import { buildQuery } from "./_shared";
 
 export interface PrintUploadInput {
   image: Blob;
@@ -12,10 +13,22 @@ export interface PrintUploadInput {
   worldName?: string;
 }
 
+export interface PrintsListParams {
+  n?: number;
+  offset?: number;
+}
+
 export class PrintsResource extends VrcResource {
-  // GET /prints/user/{userId}?n=100 — a user's prints (raw). Single request.
-  list(userId: string): Promise<VRChatPrint[]> {
-    return this.requestArray<VRChatPrint>(`/prints/user/${encodeURIComponent(userId)}?n=100`);
+  // GET /prints/user/{userId} — a user's prints (raw). n/offset are omitted
+  // when unspecified so the API's own defaults apply. Single request.
+  //
+  // No listAll: whether /prints/user/{userId} honors `offset` at all is
+  // unverified against the real API. Auto-paginating an endpoint that ignores
+  // offset would loop forever over identical pages, so pagination is left to
+  // the caller until that's confirmed.
+  list(userId: string, params: PrintsListParams = {}): Promise<VRChatPrint[]> {
+    const query = buildQuery({ n: params.n, offset: params.offset });
+    return this.requestArray<VRChatPrint>(`/prints/user/${encodeURIComponent(userId)}${query}`);
   }
 
   // POST /prints (multipart/form-data). Uploads an arbitrary image as a Print,

@@ -16,6 +16,12 @@ describe("FriendsResource.list", () => {
     expect(calls[0]?.path).toBe("/auth/user/friends?offline=false&n=100&offset=0");
   });
 
+  test("a partial params object only includes the keys that are set", async () => {
+    const { transport, calls } = recorder(replyJson([]));
+    await new FriendsResource(transport).list({ offset: 50 });
+    expect(calls[0]?.path).toBe("/auth/user/friends?offset=50");
+  });
+
   test("normalizes a non-array body to []", async () => {
     const { transport } = recorder(replyJson(null));
     expect(await new FriendsResource(transport).list()).toEqual([]);

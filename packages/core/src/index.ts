@@ -1,6 +1,4 @@
-export const VRCHAT_API_BASE = "https://vrchat.com/api/1";
-
-export function buildApiUrl(path: string): string {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${VRCHAT_API_BASE}${normalizedPath}`;
-}
+export { VrcClient } from "./client";
+export { VrcResource } from "./resource";
+export { type ApiErrorResponse, parseVrcResponse, VrcError } from "./response";
+export type { VrcTransport } from "./transport/types";

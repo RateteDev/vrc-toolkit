@@ -2,5 +2,11 @@
   "name": "@vrc-toolkit/core",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./transport/session": "./src/transport/session.ts",
+    "./transport/credentials": "./src/transport/credentials.ts",
+    "./domain": "./src/domain/index.ts"
+  }
 }

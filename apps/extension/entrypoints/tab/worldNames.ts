@@ -10,6 +10,12 @@ import type { VrcClient } from "@vrc-toolkit/core";
 import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "vrct.worldNames.v1";
+// Delay between world lookups. 100ms (≈10 req/s) is a deliberate choice over a
+// more conservative 200-500ms: names are resolved serially and drawn as they
+// arrive, so a longer delay would make the first few visible names feel slow.
+// The load stays bounded because requests are sequential, unresolved ids are
+// cached in `failed` (no retry storms), and resolved names persist across
+// sessions — so steady-state runs issue almost none. Revisit if it feels heavy.
 const REQUEST_DELAY_MS = 100;
 // Cap the persisted cache so it cannot grow without bound over long-term use.
 // Oldest (least-recently-inserted) entries are dropped first.

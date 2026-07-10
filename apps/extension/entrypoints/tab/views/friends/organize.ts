@@ -1,0 +1,125 @@
+// Pure filter / sort / group logic for the friends list. Network-free and
+// UI-free so it can be unit-tested in isolation.
+
+import {
+  deriveTrustRank,
+  isJoinable,
+  parseLocation,
+  TRUST_RANK_ORDER,
+} from "@vrc-toolkit/core/domain";
+import type { Person } from "./people";
+
+export type PresenceFilter = "joinable" | "online" | "all";
+export type SortMode = "default" | "name" | "status";
+
+export interface FriendFilter {
+  search: string;
+  presence: PresenceFilter;
+  // Selected raw status strings (e.g. "join me"). Empty = no status constraint.
+  statuses: Set<string>;
+  // Minimum trust rank as an index into TRUST_RANK_ORDER; 0 = include all.
+  minTrust: number;
+}
+
+// Presence-status sort priority (join me first, offline last), mirroring how
+// VRChat surfaces the most-joinable friends at the top.
+const STATUS_PRIORITY: Record<string, number> = {
+  "join me": 0,
+  active: 1,
+  "ask me": 2,
+  busy: 3,
+};
+
+export function isPersonJoinable(p: Person): boolean {
+  return p.isOnline && isJoinable(parseLocation(p.location));
+}
+
+export function personTrustIndex(p: Person): number {
+  return TRUST_RANK_ORDER.indexOf(deriveTrustRank(p.tags));
+}
+
+export function countByPresence(people: Person[]): {
+  joinable: number;
+  online: number;
+  all: number;
+} {
+  let joinable = 0;
+  let online = 0;
+  for (const p of people) {
+    if (p.isOnline) online++;
+    if (isPersonJoinable(p)) joinable++;
+  }
+  return { joinable, online, all: people.length };
+}
+
+export function filterPeople(people: Person[], f: FriendFilter): Person[] {
+  const needle = f.search.trim().toLowerCase();
+  return people.filter((p) => {
+    if (f.presence === "online" && !p.isOnline) return false;
+    if (f.presence === "joinable" && !isPersonJoinable(p)) return false;
+    if (needle && !p.displayName.toLowerCase().includes(needle)) return false;
+    if (f.statuses.size > 0 && !f.statuses.has(p.status)) return false;
+    if (f.minTrust > 0 && personTrustIndex(p) < f.minTrust) return false;
+    return true;
+  });
+}
+
+export function sortPeople(people: Person[], mode: SortMode): Person[] {
+  const list = [...people];
+  if (mode === "name") {
+    list.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    return list;
+  }
+  if (mode === "status") {
+    list.sort((a, b) => {
+      const pa = a.isOnline ? (STATUS_PRIORITY[a.status] ?? 4) : 5;
+      const pb = b.isOnline ? (STATUS_PRIORITY[b.status] ?? 4) : 5;
+      if (pa !== pb) return pa - pb;
+      return a.displayName.localeCompare(b.displayName);
+    });
+    return list;
+  }
+  // "default": online-first, then by display name (the buildPeople order).
+  list.sort((a, b) => {
+    if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+    return a.displayName.localeCompare(b.displayName);
+  });
+  return list;
+}
+
+export interface WorldGroup {
+  key: string;
+  // Resolved world name, or null while unresolved / not an instance world.
+  worldName: string | null;
+  members: Person[];
+}
+
+// Group online friends who are in a joinable/instance world by that world;
+// everyone else (private, traveling, offline, or unresolved-non-instance) falls
+// into a trailing "その他" group. Named groups are ordered by member count
+// desc; within a group, members keep the incoming order.
+export function groupByWorld(
+  people: Person[],
+  nameOf: (worldId: string | null | undefined) => string | undefined,
+): WorldGroup[] {
+  const byWorld = new Map<string, Person[]>();
+  const others: Person[] = [];
+  for (const p of people) {
+    const parsed = parseLocation(p.location);
+    if (p.isOnline && parsed.kind === "instance" && parsed.worldId) {
+      const arr = byWorld.get(parsed.worldId);
+      if (arr) arr.push(p);
+      else byWorld.set(parsed.worldId, [p]);
+    } else {
+      others.push(p);
+    }
+  }
+  const groups: WorldGroup[] = Array.from(byWorld.entries()).map(([worldId, members]) => ({
+    key: worldId,
+    worldName: nameOf(worldId) ?? null,
+    members,
+  }));
+  groups.sort((a, b) => b.members.length - a.members.length);
+  if (others.length) groups.push({ key: "__other__", worldName: null, members: others });
+  return groups;
+}

@@ -1,72 +1,131 @@
-import { isJoinable, parseLocation, toFriendSummary } from "@vrc-toolkit/core/domain";
-import { useEffect, useState } from "react";
+import {
+  parseLocation,
+  TRUST_RANK_LABELS,
+  TRUST_RANK_ORDER,
+  toFriendSummary,
+} from "@vrc-toolkit/core/domain";
+import { useEffect, useMemo, useState } from "react";
+import { LastUpdated } from "../components/LastUpdated";
 import { useVrc } from "../vrc";
+import { useWorldNames, worldNameStore } from "../worldNames";
 import { CardModal } from "./friends/CardModal";
+import {
+  countByPresence,
+  filterPeople,
+  groupByWorld,
+  type PresenceFilter,
+  type SortMode,
+  sortPeople,
+} from "./friends/organize";
 import { PersonCard } from "./friends/PersonCard";
 import { buildPeople, type Person } from "./friends/people";
+import { ViewLargeIcon, ViewListIcon, ViewSmallIcon } from "./prints/icons";
 
-type FriendMode = "online" | "all";
 type GridViewMode = "list" | "sm" | "lg";
 
-const VIEW_TOGGLE_MODES: { mode: GridViewMode; label: string }[] = [
-  { mode: "list", label: "リスト表示" },
-  { mode: "sm", label: "小カード表示" },
-  { mode: "lg", label: "大カード表示" },
+const GRID_MODES = [
+  { mode: "list", label: "リスト表示", icon: ViewListIcon },
+  { mode: "sm", label: "小カード表示", icon: ViewSmallIcon },
+  { mode: "lg", label: "大カード表示", icon: ViewLargeIcon },
+] as const;
+
+const PRESENCE_TABS: { value: PresenceFilter; label: string }[] = [
+  { value: "joinable", label: "参加可能" },
+  { value: "online", label: "オンライン" },
+  { value: "all", label: "全員" },
 ];
 
-function formatClock(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
+const STATUS_CHIPS: { status: string; label: string; dot: string }[] = [
+  { status: "join me", label: "join me", dot: "joinme" },
+  { status: "active", label: "active", dot: "active" },
+  { status: "ask me", label: "ask me", dot: "askme" },
+  { status: "busy", label: "busy", dot: "busy" },
+];
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "default", label: "標準" },
+  { value: "name", label: "名前順" },
+  { value: "status", label: "ステータス順" },
+];
 
 export function FriendsView() {
   const client = useVrc();
+  const nameOf = useWorldNames();
+
   const [people, setPeople] = useState<Person[]>([]);
   const [status, setStatus] = useState<string | null>("読み込み中…");
-  const [mode, setMode] = useState<FriendMode>("online");
-  const [joinableOnly, setJoinableOnly] = useState(false);
-  const [gridMode, setGridMode] = useState<GridViewMode>("sm");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [openUserId, setOpenUserId] = useState<string | null>(null);
 
+  // View controls.
+  const [gridMode, setGridMode] = useState<GridViewMode>("sm");
+  const [groupByWorldOn, setGroupByWorldOn] = useState(false);
+  // Filter controls.
+  const [search, setSearch] = useState("");
+  const [presence, setPresence] = useState<PresenceFilter>("online");
+  const [statuses, setStatuses] = useState<Set<string>>(new Set());
+  const [minTrust, setMinTrust] = useState(0);
+  const [sort, setSort] = useState<SortMode>("default");
+
   const load = () => {
     setStatus("読み込み中…");
-    // Friends: a single page (n=100), matching the Worker UI's dashboard call
-    // — online friend counts rarely exceed 100, and this keeps the request
-    // count minimal. Notes: paged to exhaustion since the owner's note count
-    // is unbounded.
+    // Online friends: a single page (n=100). Notes: paged to exhaustion.
     Promise.all([client.friends.list({ offline: false, n: 100 }), client.notes.listAll()])
       .then(([friends, notes]) => {
-        const merged = buildPeople(friends.map(toFriendSummary), notes);
-        setPeople(merged);
+        setPeople(buildPeople(friends.map(toFriendSummary), notes));
         setLastUpdate(new Date());
+        setStatus(null);
       })
       .catch((e: unknown) => {
         setStatus(`ネットワークエラー: ${e instanceof Error ? e.message : String(e)}`);
       });
   };
 
-  // Loads once on mount. There is no lazy per-tab-switch trigger like the old
-  // SPA's triggerLoad(), because Layout mounts every view eagerly and only
-  // toggles a `hidden` attribute.
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional mount-only load
   useEffect(() => {
     load();
   }, []);
 
-  const onlineCount = people.filter((p) => p.isOnline).length;
-  const list = people.filter((p) => {
-    if (mode === "online" && !p.isOnline) return false;
-    if (joinableOnly && (!p.isOnline || !isJoinable(parseLocation(p.location)))) return false;
-    return true;
-  });
+  // Resolve world names for the online instance friends, gently and cached.
+  useEffect(() => {
+    for (const p of people) {
+      if (!p.isOnline) continue;
+      const parsed = parseLocation(p.location);
+      if (parsed.kind === "instance" && parsed.worldId) {
+        worldNameStore.request(client, parsed.worldId);
+      }
+    }
+  }, [people, client]);
+
+  const counts = useMemo(() => countByPresence(people), [people]);
+
+  const visible = useMemo(
+    () => sortPeople(filterPeople(people, { search, presence, statuses, minTrust }), sort),
+    [people, search, presence, statuses, minTrust, sort],
+  );
+
+  const groups = useMemo(
+    () => (groupByWorldOn ? groupByWorld(visible, nameOf) : null),
+    [groupByWorldOn, visible, nameOf],
+  );
+
+  const toggleStatus = (s: string) => {
+    setStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
+      return next;
+    });
+  };
+
+  const worldNameFor = (p: Person): string | undefined => {
+    const parsed = parseLocation(p.location);
+    return parsed.kind === "instance" ? nameOf(parsed.worldId) : undefined;
+  };
 
   let emptyMessage: string | null = null;
-  if (people.length > 0 && list.length === 0) {
-    if (joinableOnly) emptyMessage = "参加可能なフレンドはいません。";
-    else if (mode === "online") emptyMessage = "オンラインのフレンドはいません。";
-    else emptyMessage = "フレンドやメモはまだありません。";
-  }
+  if (people.length > 0 && visible.length === 0)
+    emptyMessage = "条件に一致するフレンドはいません。";
   const displayStatus = people.length === 0 ? status : emptyMessage;
 
   return (
@@ -74,88 +133,148 @@ export function FriendsView() {
       <section className="card">
         <div className="mhead">
           <h2>フレンド</h2>
-          {lastUpdate && <span className="flast-update">最終更新: {formatClock(lastUpdate)}</span>}
+          <LastUpdated at={lastUpdate} />
           <div className="view-toggle">
-            {VIEW_TOGGLE_MODES.map(({ mode: m, label }) => (
+            {GRID_MODES.map(({ mode, label, icon: Icon }) => (
               <button
-                key={m}
+                key={mode}
                 type="button"
-                className={gridMode === m ? "vtog active" : "vtog"}
+                className={gridMode === mode ? "vtog active" : "vtog"}
                 aria-label={label}
-                onClick={() => setGridMode(m)}
+                onClick={() => setGridMode(mode)}
               >
-                {m === "list" && (
-                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                    <path
-                      d="M1 3h12M1 7h12M1 11h12"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      fill="none"
-                    />
-                  </svg>
-                )}
-                {m === "sm" && (
-                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                    <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" />
-                    <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" />
-                    <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" />
-                    <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" />
-                  </svg>
-                )}
-                {m === "lg" && (
-                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                    <rect x="1" y="1" width="12" height="5" rx="1" fill="currentColor" />
-                    <rect x="1" y="8" width="12" height="5" rx="1" fill="currentColor" />
-                  </svg>
-                )}
+                <Icon />
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className={groupByWorldOn ? "grpbtn active" : "grpbtn"}
+            aria-pressed={groupByWorldOn}
+            onClick={() => setGroupByWorldOn((v) => !v)}
+          >
+            ワールド別
+          </button>
           <button type="button" className="refresh" onClick={load}>
             更新
           </button>
         </div>
         <p className="hint">
-          オンラインのフレンドとメモ付きユーザーをまとめて表示します。カードをタップで名刺を開きます。
+          オンラインのフレンドとメモ付きユーザーを表示します。カードをタップで名刺を開きます。
         </p>
-        <div className="ffilter-row">
+
+        <div className="ffilters">
+          <input
+            className="fsearch"
+            type="text"
+            placeholder="名前で検索"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           <div className="fmode">
-            <button
-              type="button"
-              className={mode === "online" ? "fmode-btn active" : "fmode-btn"}
-              onClick={() => setMode("online")}
-            >
-              オンライン <span>({onlineCount})</span>
-            </button>
-            <button
-              type="button"
-              className={mode === "all" ? "fmode-btn active" : "fmode-btn"}
-              onClick={() => setMode("all")}
-            >
-              すべて <span>({people.length})</span>
-            </button>
+            {PRESENCE_TABS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                className={presence === value ? "fmode-btn active" : "fmode-btn"}
+                onClick={() => setPresence(value)}
+              >
+                {label}{" "}
+                <span>
+                  (
+                  {value === "joinable"
+                    ? counts.joinable
+                    : value === "online"
+                      ? counts.online
+                      : counts.all}
+                  )
+                </span>
+              </button>
+            ))}
           </div>
-          <label className="ftoggle">
-            <input
-              type="checkbox"
-              checked={joinableOnly}
-              onChange={(e) => setJoinableOnly(e.target.checked)}
-            />{" "}
-            参加可能のみ
-          </label>
+          <select
+            className="fsort"
+            aria-label="並び順"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortMode)}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
-        {/*
-          The old "タグで絞り込み" filter chip row went here. It depends on
-          local tags, which are out of scope this stage (no client-side
-          persistence layer yet) — see the omission note in CardModal.
-        */}
-        {displayStatus && <p className="mstatus">{displayStatus}</p>}
-        <div className={`fgrid view-${gridMode}`}>
-          {list.map((p) => (
-            <PersonCard key={p.userId} person={p} onOpen={setOpenUserId} />
-          ))}
+
+        <div className="ffilters second">
+          <div className="fchips">
+            {STATUS_CHIPS.map(({ status: s, label, dot }) => (
+              <button
+                key={s}
+                type="button"
+                className={statuses.has(s) ? "fchip active" : "fchip"}
+                aria-pressed={statuses.has(s)}
+                onClick={() => toggleStatus(s)}
+              >
+                <span className={`fdot ${dot}`} />
+                {label}
+              </button>
+            ))}
+          </div>
+          <select
+            className="ftrust"
+            aria-label="トラストランク"
+            value={minTrust}
+            onChange={(e) => setMinTrust(Number(e.target.value))}
+          >
+            <option value={0}>トラスト: すべて</option>
+            {TRUST_RANK_ORDER.map((rank, i) =>
+              i === 0 ? null : (
+                <option key={rank} value={i}>
+                  {TRUST_RANK_LABELS[rank]} 以上
+                </option>
+              ),
+            )}
+          </select>
         </div>
+
+        {displayStatus ? <p className="mstatus">{displayStatus}</p> : null}
+
+        {groups ? (
+          <div className="fgroups">
+            {groups.map((g) => (
+              <div key={g.key} className="fgroup">
+                <div className="fgroup-head">
+                  <span className="fgroup-name">
+                    {g.key === "__other__" ? "その他" : (g.worldName ?? "読み込み中…")}
+                  </span>
+                  <span className="fgroup-count">{g.members.length}</span>
+                </div>
+                <div className={`fgrid view-${gridMode}`}>
+                  {g.members.map((p) => (
+                    <PersonCard
+                      key={p.userId}
+                      person={p}
+                      worldName={worldNameFor(p)}
+                      onOpen={setOpenUserId}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={`fgrid view-${gridMode}`}>
+            {visible.map((p) => (
+              <PersonCard
+                key={p.userId}
+                person={p}
+                worldName={worldNameFor(p)}
+                onOpen={setOpenUserId}
+              />
+            ))}
+          </div>
+        )}
       </section>
       <CardModal userId={openUserId} onClose={() => setOpenUserId(null)} onNoteSaved={load} />
     </section>

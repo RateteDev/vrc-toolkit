@@ -1,6 +1,7 @@
 import { VrcError } from "@vrc-toolkit/core";
 import { type AvatarSummary, fmtAvatar, fmtDate } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
+import { LastUpdated } from "../../components/LastUpdated";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 
@@ -25,15 +26,11 @@ function relClass(status: string): string {
   return "";
 }
 
-function pad2(n: number): string {
-  return (n < 10 ? "0" : "") + n;
-}
-
 export function AvatarsGrid() {
   const client = useVrc();
   const [avatars, setAvatars] = useState<AvatarSummary[]>([]);
   const [message, setMessage] = useState("読み込み中…");
-  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("sm");
 
   // One request per load: listAll pages GET /avatars?user=me&releaseStatus=all to
@@ -52,10 +49,7 @@ export function AvatarsGrid() {
         list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
         setAvatars(list);
         setMessage("");
-        const now = new Date();
-        setLastUpdate(
-          `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`,
-        );
+        setLastUpdate(new Date());
       })
       .catch((err) => setMessage(describeError(err)));
   }, [client]);
@@ -69,7 +63,7 @@ export function AvatarsGrid() {
       <section className="card">
         <div className="mhead">
           <h2>マイアバター</h2>
-          {lastUpdate && <span className="flast-update">最終更新: {lastUpdate}</span>}
+          <LastUpdated at={lastUpdate} />
           <div className="view-toggle">
             {VIEW_MODES.map(({ mode, label }) => (
               <button

@@ -1,46 +1,39 @@
 import { isJoinable, parseLocation } from "@vrc-toolkit/core/domain";
+import { statusDotClass } from "../../status";
 import { cssUrl } from "../cssUrl";
 import type { Person } from "./people";
 
-// Presence dot color, keyed off VRChat's status string (ported verbatim from
-// the Worker UI's statusClass).
-function statusClass(status: string): string {
-  if (status === "join me") return "joinme";
-  if (status === "active") return "active";
-  if (status === "ask me") return "askme";
-  if (status === "busy") return "busy";
-  return "offline";
-}
-
 export function PersonCard({
   person,
+  worldName,
   onOpen,
 }: {
   person: Person;
+  // Resolved world name for an instance location, or undefined while unresolved.
+  worldName?: string;
   onOpen: (userId: string) => void;
 }) {
   const parsed = parseLocation(person.location);
   const joinable = person.isOnline && isJoinable(parsed);
 
-  let worldText: string;
+  // World line. Per design, an unresolved instance world shows NOTHING rather
+  // than a placeholder — only definite states get text.
+  let worldText = "";
   if (!person.isOnline) {
     worldText = "オフライン";
   } else if (parsed.kind === "instance") {
-    // worldName is always null: core has no worlds namespace yet to resolve
-    // worldId → name. The old Worker did this server-side via GET /worlds/{id}.
-    worldText = person.worldName || "ワールドに滞在中";
+    worldText = worldName ?? "";
   } else if (parsed.kind === "private") {
     worldText = "プライベート";
   } else if (parsed.kind === "traveling") {
     worldText = "移動中";
-  } else {
-    worldText = person.statusDescription || "";
   }
 
+  const statusText = person.isOnline ? person.statusDescription : "";
+
   return (
-    // A native button, not a div+role="button": .fcard already supplies the
-    // border/background/layout, so only the browser's default button chrome
-    // (padding/font/alignment) needs neutralizing inline.
+    // A native button, not a div+role: .fcard supplies border/background/layout,
+    // so only the browser's default button chrome needs neutralizing inline.
     <button
       type="button"
       className="fcard"
@@ -53,12 +46,13 @@ export function PersonCard({
       />
       <div className="fbody">
         <div className="fname">
-          <span className={`fdot ${person.isOnline ? statusClass(person.status) : "offline"}`} />
+          <span className={`fdot ${person.isOnline ? statusDotClass(person.status) : "offline"}`} />
           <span>{person.displayName || "（名前なし）"}</span>
         </div>
-        <div className="fworld">{worldText}</div>
-        {joinable && <div className="fjoin">参加可能</div>}
-        {person.note && <div className="fnote">{person.note}</div>}
+        {statusText ? <div className="fstatus">{statusText}</div> : null}
+        {worldText ? <div className="fworld">{worldText}</div> : null}
+        {joinable ? <div className="fjoin">参加可能</div> : null}
+        {person.note ? <div className="fnote">{person.note}</div> : null}
       </div>
     </button>
   );

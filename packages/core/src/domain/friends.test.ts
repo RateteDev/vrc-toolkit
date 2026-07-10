@@ -195,6 +195,7 @@ describe("toFriendSummary", () => {
       status: "join me",
       statusDescription: "hi",
       location: "wrld_x:12345~hidden(usr_a)~region(eu)",
+      tags: ["system_trust_known", "language_jpn"],
       currentAvatarThumbnailImageUrl: "https://api.vrchat.cloud/api/1/file/file_abc/1/file",
     });
     expect(s).toEqual({
@@ -209,6 +210,7 @@ describe("toFriendSummary", () => {
       instanceId: "12345~hidden(usr_a)~region(eu)",
       // Raw passthrough: no same-origin proxy in the extension architecture.
       imageUrl: "https://api.vrchat.cloud/api/1/file/file_abc/1/file",
+      tags: ["system_trust_known", "language_jpn"],
     });
   });
 

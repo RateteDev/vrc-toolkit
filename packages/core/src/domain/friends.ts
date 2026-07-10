@@ -115,6 +115,8 @@ export interface FriendSummary {
   worldName: string | null;
   instanceId: string | null;
   imageUrl: string | null;
+  // Trust/system tags carried through for trust-rank filtering in the UI.
+  tags: string[];
 }
 
 // Narrow a raw friend object to the fields the UI needs. Pure; worldName is left
@@ -141,5 +143,6 @@ export function toFriendSummary(f: VRChatFriend): FriendSummary {
     // Raw passthrough: the extension calls the API with the user's own
     // session, so there is no same-origin proxy to route thumbnails through.
     imageUrl: thumb,
+    tags: f?.tags ?? [],
   };
 }

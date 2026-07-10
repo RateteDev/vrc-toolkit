@@ -7,6 +7,7 @@ import {
   inventoryQuery,
 } from "@vrc-toolkit/core/domain";
 import { useEffect, useState } from "react";
+import { LastUpdated } from "../../components/LastUpdated";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 
@@ -17,22 +18,16 @@ const INV_TABS: { value: InventoryType; label: string }[] = [
 
 type ViewMode = "list" | "sm" | "lg";
 
-function pad2(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
-}
-
-function formatUpdatedAt(d: Date): string {
-  return `最終更新: ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
-}
-
 export function StickerInventoryCard({
   invType,
   onInvTypeChange,
   reloadNonce,
+  onOpenUpload,
 }: {
   invType: InventoryType;
   onInvTypeChange: (type: InventoryType) => void;
   reloadNonce: number;
+  onOpenUpload: () => void;
 }) {
   const vrc = useVrc();
 
@@ -80,7 +75,7 @@ export function StickerInventoryCard({
     <section className="card">
       <div className="mhead">
         <h2>所有アイテム</h2>
-        {lastUpdate && <span className="flast-update">{formatUpdatedAt(lastUpdate)}</span>}
+        <LastUpdated at={lastUpdate} />
         <div className="view-toggle">
           <button
             type="button"
@@ -132,6 +127,11 @@ export function StickerInventoryCard({
         </button>
       </div>
       <p className="hint">所有しているステッカー・絵文字を一覧します（各 18 枠）。</p>
+      <div className="ptoolbar">
+        <button type="button" className="postbtn" onClick={onOpenUpload}>
+          + 投稿
+        </button>
+      </div>
       <div className="invtabs">
         {INV_TABS.map((t) => (
           <button

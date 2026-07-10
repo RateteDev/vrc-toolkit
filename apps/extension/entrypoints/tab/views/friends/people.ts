@@ -21,6 +21,9 @@ export interface Person {
   location: string;
   worldName: string | null;
   note: string;
+  // VRChat trust/system tags, used to derive the trust rank for filtering.
+  // Empty for note-only (offline) users the friend list did not return.
+  tags: string[];
   // Always [] this stage: local tags require client-side persistence, which is
   // out of scope (see the omission note in FriendsView). Kept on the shape so
   // the domain merge/format helpers can be used as designed.
@@ -65,6 +68,7 @@ export function buildPeople(friends: FriendSummary[], rawNotes: RawUserNote[]): 
       location: f.location,
       worldName: f.worldName,
       note: "",
+      tags: f.tags,
       localTags: [],
     });
   });
@@ -90,6 +94,7 @@ export function buildPeople(friends: FriendSummary[], rawNotes: RawUserNote[]): 
       location: "",
       worldName: null,
       note: view.note,
+      tags: [],
       localTags: view.localTags,
     });
   });

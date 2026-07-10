@@ -15,6 +15,7 @@ export * from "./namespaces/notes";
 export * from "./namespaces/prints";
 export * from "./namespaces/status";
 export * from "./namespaces/users";
+export * from "./namespaces/worlds";
 export { VrcError } from "./response";
 export type { VrcTransport } from "./transport/types";
 export * from "./types";

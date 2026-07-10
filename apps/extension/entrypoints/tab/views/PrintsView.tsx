@@ -1,19 +1,20 @@
-import { type MutableRefObject, useState } from "react";
-import type { PasteHandler } from "../Layout";
+import { useState } from "react";
 import { ManageSection } from "./prints/ManageSection";
-import { UploadSection } from "./prints/UploadSection";
+import { UploadModal } from "./prints/UploadModal";
 
-interface PrintsViewProps {
-  onPasteRef: MutableRefObject<PasteHandler | null>;
-}
-
-export function PrintsView({ onPasteRef }: PrintsViewProps) {
+export function PrintsView() {
   const [refreshToken, setRefreshToken] = useState(0);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   return (
     <>
-      <UploadSection onUploaded={() => setRefreshToken((n) => n + 1)} onPasteRef={onPasteRef} />
-      <ManageSection refreshToken={refreshToken} />
+      <ManageSection refreshToken={refreshToken} onOpenUpload={() => setUploadOpen(true)} />
+      {uploadOpen ? (
+        <UploadModal
+          onClose={() => setUploadOpen(false)}
+          onUploaded={() => setRefreshToken((n) => n + 1)}
+        />
+      ) : null}
     </>
   );
 }

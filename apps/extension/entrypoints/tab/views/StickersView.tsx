@@ -1,21 +1,15 @@
 import type { ImageTag, InventoryType } from "@vrc-toolkit/core/domain";
-import type { MutableRefObject } from "react";
 import { useCallback, useState } from "react";
-import type { PasteHandler } from "../Layout";
 import { StickerInventoryCard } from "./stickers/StickerInventoryCard";
-import { StickerUploadCard } from "./stickers/StickerUploadCard";
+import { StickerUploadModal } from "./stickers/StickerUploadModal";
 
-interface StickersViewProps {
-  onPasteRef: MutableRefObject<PasteHandler | null>;
-}
-
-export function StickersView({ onPasteRef }: StickersViewProps) {
+export function StickersView() {
   const [invType, setInvType] = useState<InventoryType>("sticker");
   const [reloadNonce, setReloadNonce] = useState(0);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
-  // A successful sticker/emoji upload jumps the inventory card to the
-  // matching tab and forces a refetch, mirroring the old client-script's
-  // post-upload `invType = params.tag; loadInventory()`.
+  // A successful sticker/emoji upload jumps the inventory to the matching tab
+  // and forces a refetch.
   const handleUploaded = useCallback((tag: ImageTag) => {
     if (tag !== "sticker" && tag !== "emoji") return;
     setInvType(tag);
@@ -24,12 +18,15 @@ export function StickersView({ onPasteRef }: StickersViewProps) {
 
   return (
     <section id="view-images">
-      <StickerUploadCard onUploaded={handleUploaded} onPasteRef={onPasteRef} />
       <StickerInventoryCard
         invType={invType}
         onInvTypeChange={setInvType}
         reloadNonce={reloadNonce}
+        onOpenUpload={() => setUploadOpen(true)}
       />
+      {uploadOpen ? (
+        <StickerUploadModal onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
+      ) : null}
     </section>
   );
 }

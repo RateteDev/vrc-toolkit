@@ -36,6 +36,7 @@ export interface VRChatFriend {
   status?: string;
   statusDescription?: string;
   location?: string;
+  tags?: string[];
   profilePicOverrideThumbnail?: string | null;
   currentAvatarThumbnailImageUrl?: string | null;
 }

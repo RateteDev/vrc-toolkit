@@ -1,36 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { AccountProvider, useAccount } from "./account";
 import { Layout } from "./Layout";
-import { useVrc, VrcProvider } from "./vrc";
+import { VrcProvider } from "./vrc";
 
 const LOGIN_URL = "https://vrchat.com/home/login";
 
-// The session cannot be resolved yet ("loading"), no authenticated vrchat.com
-// session was found ("anonymous"), or the account is established ("authed").
-type SessionPhase = "loading" | "anonymous" | "authed";
-
 function SessionGate() {
-  const client = useVrc();
-  const [phase, setPhase] = useState<SessionPhase>("loading");
-
-  const check = useCallback(() => {
-    setPhase("loading");
-    client.auth
-      .currentUser()
-      .then((user) => {
-        // currentUser() returns null on 401 (unauthenticated); a body without an
-        // id means the session is not fully established (e.g. 2FA pending).
-        setPhase(user?.id ? "authed" : "anonymous");
-      })
-      .catch(() => {
-        // Any non-401 transport/API failure: treat as no usable session and
-        // let the user retry rather than crash the shell.
-        setPhase("anonymous");
-      });
-  }, [client]);
-
-  useEffect(() => {
-    check();
-  }, [check]);
+  const { phase, refresh } = useAccount();
 
   if (phase === "loading") {
     return (
@@ -53,7 +28,7 @@ function SessionGate() {
             VRChat にログイン
           </a>
           <div className="mhead">
-            <button type="button" className="refresh" onClick={check}>
+            <button type="button" className="refresh" onClick={refresh}>
               再読み込み
             </button>
           </div>
@@ -68,7 +43,9 @@ function SessionGate() {
 export function App() {
   return (
     <VrcProvider>
-      <SessionGate />
+      <AccountProvider>
+        <SessionGate />
+      </AccountProvider>
     </VrcProvider>
   );
 }

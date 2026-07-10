@@ -1,14 +1,7 @@
 import { VrcError } from "@vrc-toolkit/core";
 import { type ImageTag, validateImageParams } from "@vrc-toolkit/core/domain";
-import {
-  type DragEvent,
-  type FormEvent,
-  type MutableRefObject,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import type { PasteHandler } from "../../Layout";
+import { type DragEvent, type FormEvent, useEffect, useRef, useState } from "react";
+import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
 
 const IMAGE_TAG_OPTIONS: { value: ImageTag; label: string }[] = [
@@ -25,11 +18,11 @@ interface UploadStatus {
 }
 
 interface Props {
+  onClose: () => void;
   onUploaded: (tag: ImageTag) => void;
-  onPasteRef: MutableRefObject<PasteHandler | null>;
 }
 
-export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
+export function StickerUploadModal({ onClose, onUploaded }: Props) {
   const vrc = useVrc();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +36,6 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
   const [status, setStatus] = useState<UploadStatus | null>(null);
 
   const animated = tag === "emojianimated";
-
   const pickFile = () => fileInputRef.current?.click();
 
   const handleFiles = (files: FileList | null) => {
@@ -51,14 +43,18 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
     if (picked) setFile(picked);
   };
 
+  // Paste is wired only while the modal is mounted (open).
   useEffect(() => {
-    onPasteRef.current = (pasted) => {
-      if (pasted[0]) setFile(pasted[0]);
+    const onPaste = (e: ClipboardEvent) => {
+      const f = e.clipboardData?.files?.[0];
+      if (f?.type.startsWith("image/")) {
+        e.preventDefault();
+        setFile(f);
+      }
     };
-    return () => {
-      onPasteRef.current = null;
-    };
-  }, [onPasteRef]);
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, []);
 
   const handleDrag = (dragOn: boolean) => (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -71,22 +67,12 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
     handleFiles(e.dataTransfer.files);
   };
 
-  const resetForm = () => {
-    setFile(null);
-    setTag("sticker");
-    setFrames("4");
-    setFramesOverTime("2");
-    setAnimationStyle("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!file) {
       setStatus({ message: "画像ファイルを選択してください。", isError: true });
       return;
     }
-
     let validated: ReturnType<typeof validateImageParams>;
     try {
       validated = validateImageParams({
@@ -103,7 +89,6 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
       });
       return;
     }
-
     setSubmitting(true);
     setStatus({ message: "アップロード中…", isError: false });
     try {
@@ -115,10 +100,9 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
       });
       setStatus({ message: "アップロードしました。", isError: false });
       const uploadedTag = validated.tag;
-      resetForm();
-      if (uploadedTag === "sticker" || uploadedTag === "emoji") {
-        onUploaded(uploadedTag);
-      }
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (uploadedTag === "sticker" || uploadedTag === "emoji") onUploaded(uploadedTag);
     } catch (err) {
       const message =
         err instanceof VrcError
@@ -130,10 +114,17 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
     }
   };
 
+  function requestClose() {
+    if (file && !window.confirm("選択中の画像があります。破棄して閉じますか？")) return;
+    onClose();
+  }
+
   return (
-    <section className="card">
-      <h2>ステッカー・絵文字を投稿</h2>
-      <p className="hint">PNG 画像をステッカー・絵文字・アイコン等としてアップロードします。</p>
+    <Modal
+      title="ステッカー・絵文字を投稿"
+      hint="PNG 画像をステッカー・絵文字・アイコン等としてアップロードします。"
+      onRequestClose={requestClose}
+    >
       <form onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label htmlFor="imgFile">画像ファイル（PNG）</label>
@@ -145,10 +136,7 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
             hidden
             onChange={(e) => handleFiles(e.target.files)}
           />
-          {/* biome-ignore lint/a11y/useSemanticElements: must stay a div — the
-              shared .img-drop CSS class (styles.css, not owned by this file)
-              assumes block-level layout that a <button>'s default inline-block
-              box would break. */}
+          {/* biome-ignore lint/a11y/useSemanticElements: shared .img-drop is block-level; a <button> default box would break it. */}
           <div
             className={dragging ? "img-drop drag" : "img-drop"}
             tabIndex={0}
@@ -184,7 +172,7 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
                 <path d="M5 20h14" />
               </svg>
             </div>
-            <div className="big">{file ? file.name : "クリックして画像を選択"}</div>
+            <div className="big">{file ? file.name : "クリック / ペーストで画像を選択"}</div>
             <div className="sub">PNG / 最大 10 MB</div>
           </div>
         </div>
@@ -198,51 +186,53 @@ export function StickerUploadCard({ onUploaded, onPasteRef }: Props) {
             ))}
           </select>
         </div>
-        {animated && (
-          <div className="two field">
-            <div>
-              <label htmlFor="imgFrames">frames（2-64）</label>
+        {animated ? (
+          <>
+            <div className="two field">
+              <div>
+                <label htmlFor="imgFrames">frames（2-64）</label>
+                <input
+                  id="imgFrames"
+                  type="number"
+                  min={2}
+                  max={64}
+                  step={1}
+                  value={frames}
+                  onChange={(e) => setFrames(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="imgFps">framesOverTime（1-64）</label>
+                <input
+                  id="imgFps"
+                  type="number"
+                  min={1}
+                  max={64}
+                  step={1}
+                  value={framesOverTime}
+                  onChange={(e) => setFramesOverTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="imgStyle">animationStyle（任意）</label>
               <input
-                id="imgFrames"
-                type="number"
-                min={2}
-                max={64}
-                step={1}
-                value={frames}
-                onChange={(e) => setFrames(e.target.value)}
+                id="imgStyle"
+                type="text"
+                placeholder="既定でよければ空欄"
+                value={animationStyle}
+                onChange={(e) => setAnimationStyle(e.target.value)}
               />
             </div>
-            <div>
-              <label htmlFor="imgFps">framesOverTime（1-64）</label>
-              <input
-                id="imgFps"
-                type="number"
-                min={1}
-                max={64}
-                step={1}
-                value={framesOverTime}
-                onChange={(e) => setFramesOverTime(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-        {animated && (
-          <div className="field">
-            <label htmlFor="imgStyle">animationStyle（任意）</label>
-            <input
-              id="imgStyle"
-              type="text"
-              placeholder="既定でよければ空欄"
-              value={animationStyle}
-              onChange={(e) => setAnimationStyle(e.target.value)}
-            />
-          </div>
-        )}
+          </>
+        ) : null}
         <button className="submit" type="submit" disabled={submitting}>
           アップロード
         </button>
-        {status && <p className={status.isError ? "mstatus err" : "mstatus"}>{status.message}</p>}
+        {status ? (
+          <p className={status.isError ? "mstatus err" : "mstatus"}>{status.message}</p>
+        ) : null}
       </form>
-    </section>
+    </Modal>
   );
 }

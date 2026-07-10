@@ -13,4 +13,5 @@ export * from "./presence";
 export * from "./prints";
 export * from "./stats";
 export * from "./status";
+export * from "./trust";
 export * from "./visits";

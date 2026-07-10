@@ -12,11 +12,13 @@ import { NotesResource } from "./namespaces/notes";
 import { PrintsResource } from "./namespaces/prints";
 import { StatusResource } from "./namespaces/status";
 import { UsersResource } from "./namespaces/users";
+import { WorldsResource } from "./namespaces/worlds";
 import type { VrcTransport } from "./transport/types";
 
 export class VrcClient {
   readonly auth: AuthResource;
   readonly users: UsersResource;
+  readonly worlds: WorldsResource;
   readonly friends: FriendsResource;
   readonly notes: NotesResource;
   readonly status: StatusResource;
@@ -28,6 +30,7 @@ export class VrcClient {
   constructor(readonly transport: VrcTransport) {
     this.auth = new AuthResource(transport);
     this.users = new UsersResource(transport);
+    this.worlds = new WorldsResource(transport);
     this.friends = new FriendsResource(transport);
     this.notes = new NotesResource(transport);
     this.status = new StatusResource(transport);

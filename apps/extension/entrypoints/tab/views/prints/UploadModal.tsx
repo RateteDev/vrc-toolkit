@@ -129,6 +129,9 @@ export function UploadModal({ onClose, onUploaded }: Props) {
     if (!queue.length) return;
     setSubmitting(true);
     for (const it of queue) {
+      // The user can remove a staged image mid-batch; skip anything that is no
+      // longer in the queue so it is never uploaded after being taken out.
+      if (!itemsRef.current.some((x) => x.id === it.id)) continue;
       setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, status: "uploading" } : x)));
       try {
         const blob = await cropToPrintBlob(it, it.file);
@@ -246,6 +249,7 @@ export function UploadModal({ onClose, onUploaded }: Props) {
                 type="button"
                 className="rm"
                 aria-label="削除"
+                disabled={submitting}
                 onClick={(e) => {
                   e.stopPropagation();
                   removeItem(it.id);

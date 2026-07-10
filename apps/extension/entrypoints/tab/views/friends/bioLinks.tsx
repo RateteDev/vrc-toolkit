@@ -96,27 +96,45 @@ function GlobeIcon() {
   );
 }
 
+function isHttpUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
 export function BioLinkCards({ urls }: { urls: string[] }) {
   if (!urls.length) return null;
   return (
     <div className="biolinks">
-      {urls.map((url) => {
+      {urls.map((url, i) => {
         const r = resolve(url);
-        return (
+        const badge = (
+          <>
+            <span className="biolink-badge" style={{ background: r.color }}>
+              {r.known ? r.monogram : <GlobeIcon />}
+            </span>
+            <span className="biolink-name">{r.name}</span>
+            <span className="biolink-host">{r.host}</span>
+          </>
+        );
+        // A bio link is user-controlled: only follow http(s), matching the
+        // markdown renderer. Other schemes (javascript:, data:) render as a
+        // non-clickable tile. Keys are index-suffixed since bio links may repeat.
+        // biome-ignore lint/suspicious/noArrayIndexKey: bio links are a static, non-reordering display list; the index only disambiguates duplicate URLs.
+        const key = `${url}-${i}`;
+        return isHttpUrl(url) ? (
           <a
-            key={url}
+            key={key}
             className="biolink"
             href={url}
             target="_blank"
             rel="noopener noreferrer"
             title={url}
           >
-            <span className="biolink-badge" style={{ background: r.color }}>
-              {r.known ? r.monogram : <GlobeIcon />}
-            </span>
-            <span className="biolink-name">{r.name}</span>
-            <span className="biolink-host">{r.host}</span>
+            {badge}
           </a>
+        ) : (
+          <span key={key} className="biolink" title={url}>
+            {badge}
+          </span>
         );
       })}
     </div>

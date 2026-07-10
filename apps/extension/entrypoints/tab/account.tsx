@@ -56,8 +56,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<Account | null>(null);
   const accountRef = useRef<Account | null>(null);
   accountRef.current = account;
+  // True while an optimistic status PUT is in flight, so a concurrent refresh
+  // does not overwrite the optimistic value with the server's pre-update state.
+  const updatingRef = useRef(false);
 
   const refresh = useCallback(() => {
+    if (updatingRef.current) return;
     client.auth
       .currentUser()
       .then((u) => {
@@ -81,9 +85,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   // Freshness: catch external status changes (official site / in-game) the
   // moment the user returns to this tab, plus a gentle poll while it is visible.
+  // Auto-refreshes are throttled so rapid focus toggling cannot burst requests.
   useEffect(() => {
+    let lastAuto = 0;
     const onVisible = () => {
-      if (document.visibilityState === "visible") refresh();
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastAuto < 5000) return;
+      lastAuto = now;
+      refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
     const id = setInterval(onVisible, POLL_MS);
@@ -101,6 +111,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         status: patch.status ?? cur.status,
         statusDescription: patch.statusDescription ?? cur.statusDescription,
       };
+      updatingRef.current = true;
       setAccount((a) => (a ? { ...a, ...next } : a));
       try {
         await client.status.update(cur.id, next);
@@ -109,6 +120,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
           a ? { ...a, status: cur.status, statusDescription: cur.statusDescription } : a,
         );
         throw e;
+      } finally {
+        updatingRef.current = false;
       }
     },
     [client],

@@ -8,6 +8,14 @@ import { PrintCard } from "./PrintCard";
 
 type ViewMode = "list" | "sm" | "lg";
 
+// Inter-request delay between bulk DELETEs. Writes carry more BAN risk than
+// reads, so a bulk "全選択 → 削除" must not fire back-to-back at network speed.
+const DELETE_DELAY_MS = 200;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 interface Props {
   // Bumped by the upload modal after a submit batch, to reload the grid.
   refreshToken: number;
@@ -102,14 +110,17 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
     stopRef.current = false;
     setRemoving(new Set(targets.map((p) => p.id)));
     setProgress({ total: targets.length, done: 0 });
-    for (const p of targets) {
+    for (let i = 0; i < targets.length; i++) {
       if (stopRef.current) break;
+      const p = targets[i];
+      if (!p) continue;
       try {
         await client.prints.delete(p.id);
       } catch {
         // Ignore: the reconciling reload below reflects the real server state.
       }
       setProgress((pr) => (pr ? { ...pr, done: pr.done + 1 } : pr));
+      if (i < targets.length - 1 && !stopRef.current) await delay(DELETE_DELAY_MS);
     }
     setProgress(null);
     exitSelectMode();

@@ -11,6 +11,9 @@ import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "vrct.worldNames.v1";
 const REQUEST_DELAY_MS = 100;
+// Cap the persisted cache so it cannot grow without bound over long-term use.
+// Oldest (least-recently-inserted) entries are dropped first.
+const MAX_CACHE = 2000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -85,6 +88,11 @@ class WorldNameStore {
           const name = (await client.worlds.get(id))?.name;
           if (name) {
             this.cache.set(id, name);
+            while (this.cache.size > MAX_CACHE) {
+              const oldest = this.cache.keys().next().value;
+              if (oldest === undefined) break;
+              this.cache.delete(oldest);
+            }
             this.persist();
             this.emit();
           } else {

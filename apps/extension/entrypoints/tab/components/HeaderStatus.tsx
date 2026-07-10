@@ -1,8 +1,15 @@
-import type { VrcStatus } from "@vrc-toolkit/core/domain";
+import { parseLocation, type VrcStatus } from "@vrc-toolkit/core/domain";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useAccount } from "../account";
 import { statusDotClass } from "../status";
 import { cssUrl } from "../views/cssUrl";
+
+const LOCATION_LABELS: Record<ReturnType<typeof parseLocation>["kind"], string> = {
+  instance: "ワールドに滞在中",
+  private: "プライベート",
+  traveling: "移動中",
+  offline: "オフライン",
+};
 
 const STATUS_CARDS: Array<{ value: VrcStatus; label: string }> = [
   { value: "join me", label: "join me" },
@@ -71,6 +78,18 @@ function StatusPopover() {
   const [text, setText] = useState(account?.statusDescription ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const externalDesc = account?.statusDescription ?? "";
+  // Re-sync the field when the account changes externally (poll / in-game), but
+  // never clobber what the user is actively typing.
+  useEffect(() => {
+    if (document.activeElement !== inputRef.current) setText(externalDesc);
+  }, [externalDesc]);
+
+  const locationLabel = account?.location
+    ? LOCATION_LABELS[parseLocation(account.location).kind]
+    : null;
 
   const apply = (patch: { status?: VrcStatus; statusDescription?: string }) => {
     setBusy(true);
@@ -94,6 +113,7 @@ function StatusPopover() {
 
   return (
     <div className="hpop" role="dialog" aria-label="ステータス変更">
+      {locationLabel ? <p className="hpop-loc">現在地: {locationLabel}</p> : null}
       <div className="hpop-cards">
         {STATUS_CARDS.map((card) => (
           <button
@@ -112,6 +132,7 @@ function StatusPopover() {
         <label htmlFor="hpopText">ステータス文</label>
         <div className="hpop-textrow">
           <input
+            ref={inputRef}
             id="hpopText"
             type="text"
             placeholder="表示するひとこと"

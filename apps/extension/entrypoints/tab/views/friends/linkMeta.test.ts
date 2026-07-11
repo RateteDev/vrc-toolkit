@@ -8,7 +8,7 @@ describe("resolveLinkMeta: host & favicon", () => {
   it("strips www and lowercases the host", () => {
     const m = resolveLinkMeta("https://WWW.Example.COM/whatever");
     expect(m.host).toBe("example.com");
-    expect(m.faviconUrl).toBe("https://www.google.com/s2/favicons?domain=example.com&sz=64");
+    expect(m.faviconUrl).toBe("https://www.google.com/s2/favicons?domain=example.com&sz=128");
   });
 
   it("keeps a known service name", () => {

@@ -127,7 +127,7 @@ export function resolveLinkMeta(raw: string): LinkMeta {
     serviceName,
     handle,
     faviconUrl: isHttp
-      ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`
+      ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`
       : null,
   };
 }

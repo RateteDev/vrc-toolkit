@@ -1,39 +1,68 @@
-// Profile bio links rendered as icon tiles. Icons come from Google's favicon
-// service via plain <img> (browser HTTP cache, no extra host permissions;
-// only the domain is sent, never the full URL). The destination URL is shown
-// on hover via title; a recognizable profile URL also shows its @handle.
+// Profile bio links rendered as uniform icon tiles. Icons come from Google's
+// favicon service via plain <img> (browser HTTP cache, no extra host
+// permissions; only the domain is sent, never the full URL). On load failure
+// the tile falls back to a crisp vector globe. The destination URL — and the
+// @handle when the URL is a recognizable profile — is shown on hover.
 
-import { type LinkMeta, resolveLinkMeta } from "./linkMeta";
+import { useState } from "react";
+import { resolveLinkMeta } from "./linkMeta";
 
+// Fallback for links whose host exposes no favicon (Google returns HTTP 404,
+// caught by the img onError below). A filled globe reads as a finished icon at
+// tile size, unlike a thin outline; meridians are knocked out in the surface color.
 function GlobeIcon() {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="currentColor" />
+      <g fill="none" stroke="var(--surface)" strokeWidth="1.4" strokeLinecap="round">
+        <path d="M2.4 12h19.2" />
+        <ellipse cx="12" cy="12" rx="4.3" ry="10" />
+        <path d="M4.6 6.4c4.2 2.3 10.6 2.3 14.8 0M4.6 17.6c4.2-2.3 10.6-2.3 14.8 0" />
+      </g>
     </svg>
   );
 }
 
-function TileBody({ meta }: { meta: LinkMeta }) {
-  return (
-    <>
-      {meta.faviconUrl ? (
-        <img className="biolink-icon" src={meta.faviconUrl} alt="" loading="lazy" />
-      ) : (
-        <span className="biolink-icon biolink-noicon">
-          <GlobeIcon />
-        </span>
-      )}
-      {meta.handle ? <span className="biolink-handle">{meta.handle}</span> : null}
-    </>
+function LinkTile({ url }: { url: string }) {
+  const meta = resolveLinkMeta(url);
+  const [broken, setBroken] = useState(false);
+  const label = meta.serviceName ?? meta.host;
+  const ariaLabel = meta.handle ? `${label} ${meta.handle}` : label;
+  // Hover tooltip: handle when known, plus the full destination URL.
+  const title = meta.handle ? `${meta.handle} · ${url}` : url;
+
+  const icon =
+    meta.faviconUrl && !broken ? (
+      <img
+        className="biolink-icon"
+        src={meta.faviconUrl}
+        alt=""
+        loading="lazy"
+        onError={() => setBroken(true)}
+      />
+    ) : (
+      <span className="biolink-icon biolink-noicon">
+        <GlobeIcon />
+      </span>
+    );
+
+  // A bio link is user-controlled: only follow http(s), matching the markdown
+  // renderer. Other schemes (javascript:, data:) render as a non-clickable tile.
+  return meta.faviconUrl ? (
+    <a
+      className="biolink"
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={title}
+      aria-label={ariaLabel}
+    >
+      {icon}
+    </a>
+  ) : (
+    <span className="biolink" title={url}>
+      {icon}
+    </span>
   );
 }
 
@@ -42,29 +71,9 @@ export function BioLinkCards({ urls }: { urls: string[] }) {
   return (
     <div className="biolinks">
       {urls.map((url, i) => {
-        const meta = resolveLinkMeta(url);
-        const label = meta.serviceName ?? meta.host;
-        // A bio link is user-controlled: only follow http(s), matching the
-        // markdown renderer. Other schemes (javascript:, data:) render as a
-        // non-clickable tile. Keys are index-suffixed since bio links may repeat.
+        // Keys are index-suffixed since bio links may repeat.
         const key = `${url}-${i}`;
-        return meta.faviconUrl ? (
-          <a
-            key={key}
-            className="biolink"
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={url}
-            aria-label={meta.handle ? `${label} ${meta.handle}` : label}
-          >
-            <TileBody meta={meta} />
-          </a>
-        ) : (
-          <span key={key} className="biolink" title={url}>
-            <TileBody meta={meta} />
-          </span>
-        );
+        return <LinkTile key={key} url={url} />;
       })}
     </div>
   );

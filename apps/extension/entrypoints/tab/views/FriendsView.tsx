@@ -1,23 +1,22 @@
-import { parseLocation, toFriendSummary } from "@vrc-toolkit/core/domain";
+import { parseLocation } from "@vrc-toolkit/core/domain";
 import { useEffect, useMemo, useState } from "react";
 import { LastUpdated } from "../components/LastUpdated";
 import { type ViewMode, ViewToggle } from "../components/ViewToggle";
+import { friendsStore, useFriends } from "../friendsStore";
 import { useVrc } from "../vrc";
-import { useWorldNames, worldNameStore } from "../worldNames";
+import { useWorldNames, worldStore } from "../worldNames";
 import { CardModal } from "./friends/CardModal";
 import {
   countByPresence,
   filterPeople,
-  groupByWorld,
   type PresenceFilter,
   type SortMode,
   sortPeople,
 } from "./friends/organize";
 import { PersonCard } from "./friends/PersonCard";
-import { buildPeople, type Person } from "./friends/people";
+import type { Person } from "./friends/people";
 
 const PRESENCE_TABS: { value: PresenceFilter; label: string }[] = [
-  { value: "joinable", label: "参加可能" },
   { value: "online", label: "オンライン" },
   { value: "all", label: "全員" },
 ];
@@ -28,40 +27,26 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "status", label: "ステータス順" },
 ];
 
+// Person-centric management: search, notes, and trust info for individual
+// friends. Where-to-join browsing (world grouping, thumbnails) now lives in
+// JoinView instead; both views share one friendsStore fetch.
 export function FriendsView() {
   const client = useVrc();
   const nameOf = useWorldNames();
+  const { people, status, lastUpdate } = useFriends();
 
-  const [people, setPeople] = useState<Person[]>([]);
-  const [status, setStatus] = useState<string | null>("読み込み中…");
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [openUserId, setOpenUserId] = useState<string | null>(null);
 
   // View controls.
   const [gridMode, setGridMode] = useState<ViewMode>("card");
-  const [groupByWorldOn, setGroupByWorldOn] = useState(false);
   // Filter controls.
   const [search, setSearch] = useState("");
   const [presence, setPresence] = useState<PresenceFilter>("online");
   const [sort, setSort] = useState<SortMode>("default");
 
-  const load = () => {
-    setStatus("読み込み中…");
-    // Online friends: a single page (n=100). Notes: paged to exhaustion.
-    Promise.all([client.friends.list({ offline: false, n: 100 }), client.notes.listAll()])
-      .then(([friends, notes]) => {
-        setPeople(buildPeople(friends.map(toFriendSummary), notes));
-        setLastUpdate(new Date());
-        setStatus(null);
-      })
-      .catch((e: unknown) => {
-        setStatus(`ネットワークエラー: ${e instanceof Error ? e.message : String(e)}`);
-      });
-  };
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional mount-only load
   useEffect(() => {
-    load();
+    friendsStore.ensureLoaded(client);
   }, []);
 
   // Resolve world names for the online instance friends, gently and cached.
@@ -70,7 +55,7 @@ export function FriendsView() {
       if (!p.isOnline) continue;
       const parsed = parseLocation(p.location);
       if (parsed.kind === "instance" && parsed.worldId) {
-        worldNameStore.request(client, parsed.worldId);
+        worldStore.request(client, parsed.worldId);
       }
     }
   }, [people, client]);
@@ -80,11 +65,6 @@ export function FriendsView() {
   const visible = useMemo(
     () => sortPeople(filterPeople(people, { search, presence }), sort),
     [people, search, presence, sort],
-  );
-
-  const groups = useMemo(
-    () => (groupByWorldOn ? groupByWorld(visible, nameOf) : null),
-    [groupByWorldOn, visible, nameOf],
   );
 
   const worldNameFor = (p: Person): string | undefined => {
@@ -104,21 +84,11 @@ export function FriendsView() {
           <h2>フレンド</h2>
           <LastUpdated at={lastUpdate} />
           <ViewToggle mode={gridMode} onChange={setGridMode} />
-          <button
-            type="button"
-            className={groupByWorldOn ? "grpbtn active" : "grpbtn"}
-            aria-pressed={groupByWorldOn}
-            onClick={() => setGroupByWorldOn((v) => !v)}
-          >
-            ワールド別
-          </button>
-          <button type="button" className="refresh" onClick={load}>
+          <button type="button" className="refresh" onClick={() => friendsStore.load(client)}>
             更新
           </button>
         </div>
-        <p className="hint">
-          オンラインのフレンドとメモ付きユーザーを表示します。カードをタップで名刺を開きます。
-        </p>
+        <p className="hint">フレンドを検索し、メモを管理します。カードをタップで名刺を開きます。</p>
 
         <div className="ffilters">
           <input
@@ -136,16 +106,7 @@ export function FriendsView() {
                 className={presence === value ? "fmode-btn active" : "fmode-btn"}
                 onClick={() => setPresence(value)}
               >
-                {label}{" "}
-                <span>
-                  (
-                  {value === "joinable"
-                    ? counts.joinable
-                    : value === "online"
-                      ? counts.online
-                      : counts.all}
-                  )
-                </span>
+                {label} <span>({value === "online" ? counts.online : counts.all})</span>
               </button>
             ))}
           </div>
@@ -165,43 +126,22 @@ export function FriendsView() {
 
         {displayStatus ? <p className="mstatus">{displayStatus}</p> : null}
 
-        {groups ? (
-          <div className="fgroups">
-            {groups.map((g) => (
-              <div key={g.key} className="fgroup">
-                <div className="fgroup-head">
-                  <span className="fgroup-name">
-                    {g.key === "__other__" ? "その他" : (g.worldName ?? "読み込み中…")}
-                  </span>
-                  <span className="fgroup-count">{g.members.length}</span>
-                </div>
-                <div className={`fgrid view-${gridMode}`}>
-                  {g.members.map((p) => (
-                    <PersonCard
-                      key={p.userId}
-                      person={p}
-                      worldName={worldNameFor(p)}
-                      onOpen={setOpenUserId}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className={`fgrid view-${gridMode}`}>
-            {visible.map((p) => (
-              <PersonCard
-                key={p.userId}
-                person={p}
-                worldName={worldNameFor(p)}
-                onOpen={setOpenUserId}
-              />
-            ))}
-          </div>
-        )}
+        <div className={`fgrid view-${gridMode}`}>
+          {visible.map((p) => (
+            <PersonCard
+              key={p.userId}
+              person={p}
+              worldName={worldNameFor(p)}
+              onOpen={setOpenUserId}
+            />
+          ))}
+        </div>
       </section>
-      <CardModal userId={openUserId} onClose={() => setOpenUserId(null)} onNoteSaved={load} />
+      <CardModal
+        userId={openUserId}
+        onClose={() => setOpenUserId(null)}
+        onNoteSaved={() => friendsStore.load(client)}
+      />
     </section>
   );
 }

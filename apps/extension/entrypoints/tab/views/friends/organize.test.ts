@@ -4,6 +4,7 @@ import {
   type FriendFilter,
   filterPeople,
   groupByWorld,
+  isPersonJoinable,
   sortPeople,
 } from "./organize";
 import type { Person } from "./people";
@@ -46,13 +47,6 @@ describe("filterPeople", () => {
     expect(
       filterPeople(people, { ...baseFilter, presence: "online" }).map((p) => p.userId),
     ).toEqual(["a", "c"]);
-  });
-
-  test("presence=joinable keeps only joinable instances", () => {
-    // Carol is in a private instance → not joinable; Bob offline → not joinable.
-    expect(
-      filterPeople(people, { ...baseFilter, presence: "joinable" }).map((p) => p.userId),
-    ).toEqual(["a"]);
   });
 
   test("search matches display name case-insensitively", () => {
@@ -103,12 +97,26 @@ describe("groupByWorld", () => {
 });
 
 describe("countByPresence", () => {
-  test("counts joinable/online/all", () => {
+  test("counts online/all", () => {
     const people = [
       person({ status: "join me" }),
       person({ isOnline: false, location: "offline" }),
       person({ location: "wrld_x:1~private(usr_a)" }),
     ];
-    expect(countByPresence(people)).toEqual({ joinable: 1, online: 2, all: 3 });
+    expect(countByPresence(people)).toEqual({ online: 2, all: 3 });
+  });
+});
+
+describe("isPersonJoinable", () => {
+  test("true for an online friend in a public/friends/hidden instance", () => {
+    expect(isPersonJoinable(person({ location: "wrld_a:1~region(jp)" }))).toBe(true);
+  });
+
+  test("false for an offline friend", () => {
+    expect(isPersonJoinable(person({ isOnline: false, location: "offline" }))).toBe(false);
+  });
+
+  test("false for a friend in a private instance", () => {
+    expect(isPersonJoinable(person({ location: "wrld_x:1~private(usr_a)" }))).toBe(false);
   });
 });

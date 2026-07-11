@@ -4,7 +4,7 @@
 import { isJoinable, parseLocation } from "@vrc-toolkit/core/domain";
 import type { Person } from "./people";
 
-export type PresenceFilter = "joinable" | "online" | "all";
+export type PresenceFilter = "online" | "all";
 export type SortMode = "default" | "name" | "status";
 
 export interface FriendFilter {
@@ -26,24 +26,20 @@ export function isPersonJoinable(p: Person): boolean {
 }
 
 export function countByPresence(people: Person[]): {
-  joinable: number;
   online: number;
   all: number;
 } {
-  let joinable = 0;
   let online = 0;
   for (const p of people) {
     if (p.isOnline) online++;
-    if (isPersonJoinable(p)) joinable++;
   }
-  return { joinable, online, all: people.length };
+  return { online, all: people.length };
 }
 
 export function filterPeople(people: Person[], f: FriendFilter): Person[] {
   const needle = f.search.trim().toLowerCase();
   return people.filter((p) => {
     if (f.presence === "online" && !p.isOnline) return false;
-    if (f.presence === "joinable" && !isPersonJoinable(p)) return false;
     if (needle && !p.displayName.toLowerCase().includes(needle)) return false;
     return true;
   });

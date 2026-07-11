@@ -405,13 +405,13 @@ textarea { resize: vertical; min-height: 62px; }
 .trustbadge.trust-known { background: #ff7b42; }
 .trustbadge.trust-trusted { background: #8143e6; }
 
-/* ── bio links as square cards ── */
-.biolinks { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin: 4px 0 14px; }
-.biolink { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; text-decoration: none; padding: 12px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: box-shadow .15s, transform .12s, border-color .15s; }
+/* ── bio links as icon tiles (favicon + optional @handle; URL on hover) ── */
+.biolinks { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.biolink { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; text-decoration: none; min-width: 56px; padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: box-shadow .15s, transform .12s, border-color .15s; }
 .biolink:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: var(--border-strong); }
-.biolink-badge { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px; flex: none; }
-.biolink-name { font-size: 12px; font-weight: 600; color: var(--ink); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.biolink-host { font-size: 10.5px; color: var(--faint); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.biolink-icon { width: 26px; height: 26px; border-radius: 6px; flex: none; }
+.biolink-noicon { display: grid; place-items: center; color: var(--faint); }
+.biolink-handle { font-size: 11px; font-weight: 600; color: var(--muted); max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* wider upload modal sheet */
 .upload-sheet { max-width: 720px; }

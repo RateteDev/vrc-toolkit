@@ -10,6 +10,11 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
+/* Scrollbars in the site palette. scrollbar-color inherits from the root; the
+   transparent track keeps rounded corners (e.g. .sheet) visually intact
+   instead of a square default-colored gutter cutting into them. */
+html { scrollbar-color: var(--border-strong) transparent; }
+.sheet, textarea, .tabs { scrollbar-width: thin; }
 body {
   font-family: var(--sans); color: var(--ink); background: var(--bg);
   background-image:

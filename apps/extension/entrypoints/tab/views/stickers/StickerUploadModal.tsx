@@ -1,6 +1,7 @@
 import { VrcError } from "@vrc-toolkit/core";
 import { type ImageTag, validateImageParams } from "@vrc-toolkit/core/domain";
-import { type DragEvent, type FormEvent, useEffect, useRef, useState } from "react";
+import { type DragEvent, type FormEvent, useCallback, useRef, useState } from "react";
+import { useImagePasteDrop } from "../../components/ImageDropZone";
 import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
 
@@ -38,23 +39,17 @@ export function StickerUploadModal({ onClose, onUploaded }: Props) {
   const animated = tag === "emojianimated";
   const pickFile = () => fileInputRef.current?.click();
 
-  const handleFiles = (files: FileList | null) => {
-    const picked = files?.[0];
-    if (picked) setFile(picked);
-  };
-
-  // Paste is wired only while the modal is mounted (open).
-  useEffect(() => {
-    const onPaste = (e: ClipboardEvent) => {
-      const f = e.clipboardData?.files?.[0];
-      if (f?.type.startsWith("image/")) {
-        e.preventDefault();
-        setFile(f);
-      }
-    };
-    document.addEventListener("paste", onPaste);
-    return () => document.removeEventListener("paste", onPaste);
+  // This modal keeps its compact form-field dropzone (filename display,
+  // PNG-oriented labels) instead of the shared ImageDropZone component, but
+  // the intake wiring goes through the shared hook so it gets the same
+  // guards: no paste hijack while typing in a field, and no tab navigation
+  // when a drop misses the zone. Re-picking replaces the staged file, which
+  // matches this zone's click-to-replace behavior (there is no crop state to
+  // lose, unlike the avatar flow).
+  const handleFiles = useCallback((files: File[]) => {
+    if (files[0]) setFile(files[0]);
   }, []);
+  useImagePasteDrop(true, handleFiles);
 
   const handleDrag = (dragOn: boolean) => (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -64,7 +59,8 @@ export function StickerUploadModal({ onClose, onUploaded }: Props) {
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragging(false);
-    handleFiles(e.dataTransfer.files);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    handleFiles(files);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -134,7 +130,7 @@ export function StickerUploadModal({ onClose, onUploaded }: Props) {
             type="file"
             accept="image/png"
             hidden
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => handleFiles(Array.from(e.target.files ?? []))}
           />
           {/* biome-ignore lint/a11y/useSemanticElements: shared .img-drop is block-level; a <button> default box would break it. */}
           <div

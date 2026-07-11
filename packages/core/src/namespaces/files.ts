@@ -2,6 +2,7 @@
 // proxy-path rewriting — URLs and Responses are returned untouched.
 
 import { VrcResource } from "../resource";
+import type { VRChatFile } from "../types";
 
 // Animation fields, only valid (and required) for the animated image tag
 // ("emojianimated").
@@ -20,9 +21,10 @@ export interface ImageUploadInput {
   animation?: ImageAnimationFields;
 }
 
-// Raw POST /file/image response (subset).
-export interface ImageUploadResponse {
-  id?: string;
+// Raw POST /file/image response (subset). The response is a full File object,
+// so it carries `versions` — needed to resolve the uploaded image's URL via
+// latestFileUrl (avatar-image flow).
+export interface ImageUploadResponse extends VRChatFile {
   ownerId?: string;
 }
 

@@ -1,13 +1,5 @@
-import { geom } from "@vrc-toolkit/core/domain";
-import {
-  type PointerEvent as ReactPointerEvent,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { PRINT_ASPECT } from "./canvas";
-import { ZoomInIcon, ZoomOutIcon } from "./icons";
+import { useEffect } from "react";
+import { CropStage } from "./CropStage";
 import type { UploadItem } from "./types";
 
 type EditableFields = Pick<UploadItem, "ncx" | "ncy" | "zoom" | "note" | "worldId" | "worldName">;
@@ -16,37 +8,16 @@ interface Props {
   item: UploadItem;
   index: number;
   total: number;
+  // Print-specific today, but explicit rather than hard-coded so this modal's
+  // crop step is not tied to PRINT_ASPECT — the caller owns its own aspect and
+  // its own copy for the frame hint (e.g. "16:9" vs "4:3").
+  aspect: number;
+  hint: string;
   onChange: (patch: Partial<EditableFields>) => void;
   onClose: () => void;
 }
 
-// Drag state lives in a ref, not React state: pointermove fires far faster
-// than a render cycle needs, and only the derived ncx/ncy (via onChange)
-// needs to trigger a re-render.
-interface DragState {
-  dragging: boolean;
-  sx: number;
-  sy: number;
-  scx: number;
-  scy: number;
-  eff: number;
-}
-
-export function CropModal({ item, index, total, onChange, onClose }: Props) {
-  const cropRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const dragRef = useRef<DragState>({ dragging: false, sx: 0, sy: 0, scx: 0, scy: 0, eff: 1 });
-
-  useLayoutEffect(() => {
-    const el = cropRef.current;
-    if (!el) return;
-    const measure = () => setContainerWidth(el.clientWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
+export function CropModal({ item, index, total, aspect, hint, onChange, onClose }: Props) {
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -61,31 +32,6 @@ export function CropModal({ item, index, total, onChange, onClose }: Props) {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
-
-  const g = item.natW ? geom(item, PRINT_ASPECT) : null;
-  const eff = g && containerWidth ? containerWidth / g.cw : 0;
-  if (eff) dragRef.current.eff = eff;
-
-  function handlePointerDown(e: ReactPointerEvent<HTMLDivElement>) {
-    if (!item.natW) return;
-    cropRef.current?.setPointerCapture(e.pointerId);
-    dragRef.current.dragging = true;
-    dragRef.current.sx = e.clientX;
-    dragRef.current.sy = e.clientY;
-    dragRef.current.scx = item.ncx * item.natW;
-    dragRef.current.scy = item.ncy * item.natH;
-  }
-  function handlePointerMove(e: ReactPointerEvent<HTMLDivElement>) {
-    const d = dragRef.current;
-    if (!d.dragging || !d.eff) return;
-    onChange({
-      ncx: (d.scx - (e.clientX - d.sx) / d.eff) / item.natW,
-      ncy: (d.scy - (e.clientY - d.sy) / d.eff) / item.natH,
-    });
-  }
-  function endDrag() {
-    dragRef.current.dragging = false;
-  }
 
   return (
     <div className="modal" role="dialog" aria-modal="true" aria-label="画像を編集">
@@ -117,41 +63,13 @@ export function CropModal({ item, index, total, onChange, onClose }: Props) {
             {index + 1} / {total}
           </span>
         </div>
-        <p className="hint">ドラッグで位置、スライダーで拡大。枠内（16:9）が Print になります。</p>
-        <div
-          className="crop"
-          ref={cropRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-        >
-          {g && eff > 0 ? (
-            <img
-              alt=""
-              src={item.url}
-              style={{
-                width: item.natW * eff,
-                height: item.natH * eff,
-                transform: `translate(${-g.srcX * eff}px, ${-g.srcY * eff}px)`,
-              }}
-            />
-          ) : null}
-          <div className="frame" />
-        </div>
-        <div className="zoom">
-          <ZoomOutIcon />
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.01}
-            value={item.zoom}
-            aria-label="拡大"
-            onChange={(e) => onChange({ zoom: Number.parseFloat(e.target.value) })}
-          />
-          <ZoomInIcon />
-        </div>
+        <p className="hint">{hint}</p>
+        <CropStage
+          url={item.url}
+          item={item}
+          aspect={aspect}
+          onChange={(patch) => onChange(patch)}
+        />
         <div className="field">
           <label htmlFor="print-crop-note">ノート</label>
           <textarea

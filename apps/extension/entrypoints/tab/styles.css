@@ -195,6 +195,17 @@ body {
 .abody { padding: 9px 11px 11px; min-width: 0; }
 .aname { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .adate { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.aplats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.aplat { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; color: var(--accent-strong); background: var(--accent-tint); border-radius: 9px; padding: 2px 7px; white-space: nowrap; }
+.adesc { font-size: 12px; color: var(--muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ameta { display: flex; align-items: center; gap: 8px; }
+.aver { font-size: 11.5px; color: var(--muted); }
+.aactions { display: flex; gap: 6px; margin-top: 8px; }
+.aactbtn { font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+.aactbtn:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
+.aactbtn:disabled { opacity: .5; cursor: default; }
+.aactbtn.danger { color: var(--err); }
+.aactbtn.danger:hover:not(:disabled) { border-color: var(--err); background: var(--err-tint); }
 .sradios { border: none; padding: 0; margin: 0 0 16px; display: grid; gap: 8px; }
 .sradios legend { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
 .sradios label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
@@ -257,6 +268,11 @@ body {
 .agrid.view-list .aname { flex: 1; min-width: 0; }
 .agrid.view-list .adate { margin-top: 0; flex: none; }
 .agrid.view-list .arel { position: static; border-radius: 6px; flex: none; }
+/* description + version are card-mode-only per spec; list stays compact. */
+.agrid.view-list .adesc, .agrid.view-list .aver { display: none; }
+.agrid.view-list .aplats { flex: none; margin-top: 0; }
+.agrid.view-list .ameta { flex: none; }
+.agrid.view-list .aactions { margin-top: 0; flex: none; }
 
 @media (max-width: 600px) {
   .tabs { overflow-x: auto; }

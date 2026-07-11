@@ -1,9 +1,10 @@
+import { PRINT_HEIGHT, PRINT_WIDTH } from "@vrc-toolkit/core/domain";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 import { CropModal } from "./CropModal";
-import { cropToPrintBlob, PRINT_ASPECT } from "./canvas";
+import { cropToBlob, PRINT_ASPECT, PRINT_OUTPUT_QUALITY, PRINT_OUTPUT_TYPE } from "./canvas";
 import { errorMessage } from "./errorMessage";
 import { UploadIcon } from "./icons";
 import { cropThumbStyle } from "./thumbStyle";
@@ -134,7 +135,13 @@ export function UploadModal({ onClose, onUploaded }: Props) {
       if (!itemsRef.current.some((x) => x.id === it.id)) continue;
       setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, status: "uploading" } : x)));
       try {
-        const blob = await cropToPrintBlob(it, it.file);
+        const blob = await cropToBlob(it, it.file, {
+          aspect: PRINT_ASPECT,
+          outputWidth: PRINT_WIDTH,
+          outputHeight: PRINT_HEIGHT,
+          type: PRINT_OUTPUT_TYPE,
+          quality: PRINT_OUTPUT_QUALITY,
+        });
         const res = await client.prints.upload({
           image: blob,
           filename: "print.jpg",
@@ -319,6 +326,8 @@ export function UploadModal({ onClose, onUploaded }: Props) {
           item={activeItem}
           index={activeIndex}
           total={items.length}
+          aspect={PRINT_ASPECT}
+          hint="ドラッグで位置、スライダーで拡大。枠内（16:9）が Print になります。"
           onChange={(patch) =>
             setItems((prev) => prev.map((x) => (x.id === activeItem.id ? { ...x, ...patch } : x)))
           }

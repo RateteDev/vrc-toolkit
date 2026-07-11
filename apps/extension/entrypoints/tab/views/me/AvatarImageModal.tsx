@@ -1,8 +1,9 @@
 import { latestFileUrl } from "@vrc-toolkit/core/domain";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { CropStage } from "../../components/CropStage";
+import { UploadIcon } from "../../components/icons";
 import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
-import { CropStage } from "../prints/CropStage";
 import {
   AVATAR_ASPECT,
   AVATAR_HEIGHT,
@@ -10,9 +11,8 @@ import {
   AVATAR_OUTPUT_TYPE,
   AVATAR_WIDTH,
   cropToBlob,
-} from "../prints/canvas";
-import { errorMessage } from "../prints/errorMessage";
-import { UploadIcon } from "../prints/icons";
+} from "../canvas";
+import { errorMessage } from "../errorMessage";
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 

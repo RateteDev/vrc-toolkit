@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { CropStage } from "./CropStage";
+import { CropStage } from "../../components/CropStage";
 import type { UploadItem } from "./types";
 
 type EditableFields = Pick<UploadItem, "ncx" | "ncy" | "zoom" | "note" | "worldId" | "worldName">;

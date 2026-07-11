@@ -1,12 +1,12 @@
 import { PRINT_HEIGHT, PRINT_WIDTH } from "@vrc-toolkit/core/domain";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { UploadIcon } from "../../components/icons";
 import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
+import { cropToBlob, PRINT_ASPECT, PRINT_OUTPUT_QUALITY, PRINT_OUTPUT_TYPE } from "../canvas";
 import { cssUrl } from "../cssUrl";
+import { errorMessage } from "../errorMessage";
 import { CropModal } from "./CropModal";
-import { cropToBlob, PRINT_ASPECT, PRINT_OUTPUT_QUALITY, PRINT_OUTPUT_TYPE } from "./canvas";
-import { errorMessage } from "./errorMessage";
-import { UploadIcon } from "./icons";
 import { cropThumbStyle } from "./thumbStyle";
 import { MAX_UPLOAD_ITEMS, type UploadItem } from "./types";
 

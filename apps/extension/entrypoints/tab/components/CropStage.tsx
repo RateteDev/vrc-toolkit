@@ -1,7 +1,7 @@
 // The interactive crop surface (drag-to-reposition image + zoom slider +
-// frame overlay), extracted out of CropModal so the avatar-image-change flow
-// (views/me/AvatarImageModal.tsx) can reuse the exact same pointer/zoom
-// mechanics at a different aspect ratio without duplicating them.
+// frame overlay), extracted out of the print CropModal so the avatar
+// image-change flow can reuse the exact same pointer/zoom mechanics at a
+// different aspect ratio without duplicating them.
 import { geom } from "@vrc-toolkit/core/domain";
 import { type PointerEvent as ReactPointerEvent, useLayoutEffect, useRef, useState } from "react";
 import { ZoomInIcon, ZoomOutIcon } from "./icons";

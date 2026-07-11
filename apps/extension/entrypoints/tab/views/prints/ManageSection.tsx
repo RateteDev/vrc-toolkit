@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LastUpdated } from "../../components/LastUpdated";
 import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
-import { errorMessage } from "./errorMessage";
+import { errorMessage } from "../errorMessage";
 import { PrintCard } from "./PrintCard";
 
 // Inter-request delay between bulk DELETEs. Writes carry more BAN risk than

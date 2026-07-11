@@ -11,11 +11,11 @@
 // CropModal, then crops (not pads) directly onto the output canvas. This
 // keeps that behavior — cover-fit crop, not letterbox.
 //
-// Originally print-only (fixed 16:9 / 1920x1080); the avatar-image-change flow
-// (views/me/AvatarImageModal.tsx) reuses this same machinery at 4:3 / 1200x900,
-// so the aspect/output/encoding are now explicit parameters (CropOutputSpec)
-// rather than baked-in constants. Callers must pass their own spec — no
-// fallback default — per the project's no-hidden-defaults convention.
+// Originally print-only (fixed 16:9 / 1920x1080); the avatar image-change
+// flow reuses this same machinery at 4:3 / 1200x900, so the
+// aspect/output/encoding are now explicit parameters (CropOutputSpec) rather
+// than baked-in constants. Callers must pass their own spec — no fallback
+// default — per the project's no-hidden-defaults convention.
 import { type CropItem, geom } from "@vrc-toolkit/core/domain";
 
 export const PRINT_ASPECT = 16 / 9;

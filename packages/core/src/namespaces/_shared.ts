@@ -32,3 +32,39 @@ export async function paginateAll<T>(
     offset += pageSize;
   }
 }
+
+// Like paginateAll, but for endpoints whose `offset` support is unverified
+// against the real API (prints, inventory). Blindly paginating an endpoint
+// that ignores `offset` would loop forever over identical full pages; this
+// variant tracks item ids and stops as soon as a page contributes no unseen
+// id — an ignored `offset` thus costs one extra request instead of a hang.
+// Already-seen items are dropped, so a repeated page adds nothing. A page
+// carrying no ids at all gives no way to detect repetition, so it is taken
+// once and paging stops there.
+export async function paginateAllGuarded<T>(
+  pageSize: number,
+  fetchPage: (offset: number) => Promise<T[]>,
+  idOf: (item: T) => string | undefined,
+): Promise<T[]> {
+  const out: T[] = [];
+  const seen = new Set<string>();
+  let offset = 0;
+  for (;;) {
+    const page = await fetchPage(offset);
+    const ids = page.map(idOf).filter((id): id is string => id !== undefined);
+    if (ids.length === 0) {
+      out.push(...page);
+      return out;
+    }
+    const fresh = page.filter((item) => {
+      const id = idOf(item);
+      return id === undefined || !seen.has(id);
+    });
+    const advanced = fresh.some((item) => idOf(item) !== undefined);
+    if (!advanced) return out;
+    for (const id of ids) seen.add(id);
+    out.push(...fresh);
+    if (page.length < pageSize) return out;
+    offset += pageSize;
+  }
+}

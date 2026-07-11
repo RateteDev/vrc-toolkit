@@ -53,8 +53,9 @@ class FriendsStore {
     this.loadedOnce = true;
     this.status = "読み込み中…";
     this.emit();
-    // Online friends: a single page (n=100). Notes: paged to exhaustion.
-    Promise.all([client.friends.list({ offline: false, n: 100 }), client.notes.listAll()])
+    // Online friends and notes: both paged to exhaustion, so friend counts
+    // beyond one page (100) are not silently truncated.
+    Promise.all([client.friends.listAll({ offline: false }), client.notes.listAll()])
       .then(([friends, notes]) => {
         this.people = buildPeople(friends.map(toFriendSummary), notes);
         this.lastUpdate = new Date();
@@ -76,6 +77,7 @@ class FriendsStore {
     if (this.loadedOnce) return;
     this.load(client);
   }
+
 }
 
 export const friendsStore = new FriendsStore();

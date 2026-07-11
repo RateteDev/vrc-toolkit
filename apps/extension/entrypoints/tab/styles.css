@@ -415,7 +415,9 @@ textarea { resize: vertical; min-height: 62px; }
 .biolink { display: grid; place-items: center; width: 44px; height: 44px; text-decoration: none; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: box-shadow .15s, transform .12s, border-color .15s; }
 .biolink:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: var(--border-strong); }
 .biolink-icon { width: 22px; height: 22px; border-radius: 5px; }
-.biolink-noicon { display: grid; place-items: center; border-radius: 0; color: var(--border-strong); }
+/* Fallback glyph: tint the unmodified Tabler world SVG via mask so it inherits
+   the palette without an inline <svg> or a fixed color baked into the file. */
+.biolink-noicon { border-radius: 0; background-color: var(--muted); -webkit-mask: url("/assets/icons/world.svg") center / 22px 22px no-repeat; mask: url("/assets/icons/world.svg") center / 22px 22px no-repeat; }
 
 /* wider upload modal sheet */
 .upload-sheet { max-width: 720px; }

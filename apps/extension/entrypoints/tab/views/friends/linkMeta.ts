@@ -3,6 +3,19 @@
 // so every host gets a real icon and unknown hosts get Google's generic
 // globe fallback. Handles are extracted only for services whose profile URL
 // shape is unambiguous.
+//
+// Why Google's favicon service instead of bundled per-service icons — a
+// deliberate reversal of the earlier no-external-request design:
+// 1. What leaks is viewer metadata: Google can observe which domains appear
+//    in the profiles this viewer opens. Domain-only and mostly mainstream
+//    hosts, so identifiability is low — accepted as negligible for a
+//    personal tool. Re-evaluate if this ever ships to a wider audience.
+// 2. Bundled icons cannot keep up with service rebrands and new services;
+//    maintaining them is recurring cost for purely cosmetic data.
+// 3. Delegating to the single most universal favicon endpoint keeps the
+//    implementation simple: one URL scheme, zero per-service assets. The
+//    tradeoff is a dependency on Google's response behavior (see the
+//    generic-globe detection heuristic in bioLinks).
 
 export interface LinkMeta {
   // Lowercased hostname without a leading "www."; the raw input if unparseable.

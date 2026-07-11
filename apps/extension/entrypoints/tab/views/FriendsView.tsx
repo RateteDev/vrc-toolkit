@@ -81,15 +81,12 @@ export function FriendsView() {
     <section id="view-friends">
       <section className="card">
         <div className="mhead">
-          <h2>フレンド</h2>
           <LastUpdated at={lastUpdate} />
           <ViewToggle mode={gridMode} onChange={setGridMode} />
           <button type="button" className="refresh" onClick={() => friendsStore.load(client)}>
             更新
           </button>
         </div>
-        <p className="hint">フレンドを検索し、メモを管理します。カードをタップで名刺を開きます。</p>
-
         <div className="ffilters">
           <input
             className="fsearch"

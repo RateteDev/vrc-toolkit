@@ -12,24 +12,13 @@ import { StickersView } from "./views/StickersView";
 // groups / worlds / profile join here as they are built (the account owner's
 // status moved out to the header widget, so there is no "自分" tab).
 const TABS = [
-  {
-    view: "join",
-    label: "JOIN先",
-    title: "JOIN先",
-    hint: "フレンドの滞在ワールドからJOIN先を探す",
-  },
-  {
-    view: "friends",
-    label: "フレンド",
-    title: "フレンド",
-    hint: "フレンドの在席・滞在先とメモを表示",
-  },
-  { view: "avatars", label: "アバター", title: "アバター", hint: "所有アバターを更新日順に一覧" },
-  { view: "prints", label: "プリント", title: "プリント", hint: "Print の投稿と管理" },
+  { view: "join", label: "JOIN先", hint: "フレンドの滞在ワールドからJOIN先を探す" },
+  { view: "friends", label: "フレンド", hint: "フレンドの在席・滞在先とメモを表示" },
+  { view: "avatars", label: "アバター", hint: "所有アバターを更新日順に一覧" },
+  { view: "prints", label: "プリント", hint: "Print の投稿と管理" },
   {
     view: "stickers",
     label: "ステッカー",
-    title: "ステッカー",
     hint: "ステッカー・絵文字のアップロードと所有アイテム管理",
   },
 ] as const;
@@ -43,12 +32,9 @@ export function Layout() {
   return (
     <main className="wrap">
       <header className="site-header rise d1">
-        <span className="brand">VRC Toolkit</span>
+        <h1 className="brand">VRC Toolkit</h1>
         <HeaderStatus />
       </header>
-      <h1 id="viewTitle" className="view-title rise d1">
-        {active.title}
-      </h1>
 
       <nav className="tabs rise d2">
         {TABS.map((tab) => (

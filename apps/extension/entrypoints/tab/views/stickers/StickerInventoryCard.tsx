@@ -74,7 +74,6 @@ export function StickerInventoryCard({
   return (
     <section className="card">
       <div className="mhead">
-        <h2>所有アイテム</h2>
         <LastUpdated at={lastUpdate} />
         <div className="view-toggle">
           <button
@@ -126,7 +125,6 @@ export function StickerInventoryCard({
           更新
         </button>
       </div>
-      <p className="hint">所有しているステッカー・絵文字を一覧します（各 18 枠）。</p>
       <div className="ptoolbar">
         <button type="button" className="postbtn" onClick={onOpenUpload}>
           + 投稿

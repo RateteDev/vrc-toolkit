@@ -49,16 +49,11 @@ export function JoinView() {
     <section id="view-join">
       <section className="card">
         <div className="mhead">
-          <h2>JOIN先</h2>
           <LastUpdated at={lastUpdate} />
           <button type="button" className="refresh" onClick={() => friendsStore.load(client)}>
             更新
           </button>
         </div>
-        <p className="hint">
-          参加可能なフレンドをワールド別に表示します。人をタップで名刺を開きます。
-        </p>
-
         {displayStatus ? <p className="mstatus">{displayStatus}</p> : null}
 
         <div className="jworld-list">

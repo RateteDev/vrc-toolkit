@@ -95,14 +95,12 @@ export function AvatarsGrid() {
     <section id="view-avatars">
       <section className="card">
         <div className="mhead">
-          <h2>マイアバター</h2>
           <LastUpdated at={lastUpdate} />
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <button type="button" className="refresh" onClick={load}>
             更新
           </button>
         </div>
-        <p className="hint">所有するアバターを更新日順に一覧します（private / hidden を含む）。</p>
         {message && <p className="mstatus">{message}</p>}
         <div className={`agrid view-${viewMode}`}>
           {avatars.map((avatar) => {

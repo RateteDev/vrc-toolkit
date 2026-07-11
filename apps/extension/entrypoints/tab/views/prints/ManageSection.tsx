@@ -136,17 +136,12 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
   return (
     <section className="card">
       <div className="mhead">
-        <h2>Print 一覧</h2>
         <LastUpdated at={lastUpdate} />
         <ViewToggle mode={viewMode} onChange={setViewMode} />
         <button type="button" className="refresh" onClick={load} disabled={busy}>
           更新
         </button>
       </div>
-      <p className="hint">
-        保存済みの Print をタイル表示します。選択して複数まとめて削除できます。
-      </p>
-
       <div className="ptoolbar">
         <button type="button" className="postbtn" onClick={onOpenUpload}>
           + 投稿

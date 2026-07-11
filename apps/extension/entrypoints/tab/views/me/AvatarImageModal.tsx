@@ -1,8 +1,9 @@
 import { latestFileUrl } from "@vrc-toolkit/core/domain";
-import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, useCallback, useState } from "react";
 import { CropStage } from "../../components/CropStage";
-import { UploadIcon } from "../../components/icons";
+import { ImageDropZone, useImagePasteDrop } from "../../components/ImageDropZone";
 import { Modal } from "../../components/Modal";
+import { useObjectUrlCleanup } from "../../objectUrls";
 import { useVrc } from "../../vrc";
 import {
   AVATAR_ASPECT,
@@ -13,21 +14,6 @@ import {
   cropToBlob,
 } from "../canvas";
 import { errorMessage } from "../errorMessage";
-
-const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
-
-function extractFirstImageFile(e: ClipboardEvent): File | null {
-  const cd = e.clipboardData;
-  if (!cd?.items) return null;
-  for (let i = 0; i < cd.items.length; i++) {
-    const item = cd.items[i];
-    if (item.kind === "file" && item.type.startsWith("image/")) {
-      const f = item.getAsFile();
-      if (f) return f;
-    }
-  }
-  return null;
-}
 
 interface Props {
   avatarId: string;
@@ -50,13 +36,11 @@ export function AvatarImageModal({ avatarId, onClose, onUpdated }: Props) {
   const [ncx, setNcx] = useState(0.5);
   const [ncy, setNcy] = useState(0.5);
   const [zoom, setZoom] = useState(1);
-  const [dragOver, setDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  useObjectUrlCleanup(() => (url ? [url] : []));
 
   const pickFile = useCallback((f: File) => {
-    if (!f.type.startsWith("image/")) return;
     const objUrl = URL.createObjectURL(f);
     setFile(f);
     setUrl(objUrl);
@@ -81,29 +65,16 @@ export function AvatarImageModal({ avatarId, onClose, onUpdated }: Props) {
     setError(null);
   }
 
-  // Paste + drop are handled only while this modal is open, and only before a
-  // file has been picked: once cropping, "選び直す" is the explicit way back
-  // rather than a stray paste silently swapping the staged image.
-  useEffect(() => {
-    if (file) return;
-    const onPaste = (e: ClipboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase() ?? "";
-      if (tag === "input" || tag === "textarea") return;
-      const f = extractFirstImageFile(e);
-      if (!f) return;
-      e.preventDefault();
-      pickFile(f);
-    };
-    const preventNav = (e: DragEvent) => e.preventDefault();
-    document.addEventListener("paste", onPaste);
-    window.addEventListener("dragover", preventNav);
-    window.addEventListener("drop", preventNav);
-    return () => {
-      document.removeEventListener("paste", onPaste);
-      window.removeEventListener("dragover", preventNav);
-      window.removeEventListener("drop", preventNav);
-    };
-  }, [file, pickFile]);
+  // Single-image flow: only the first received file is staged. Intake stops
+  // once a file has been picked — "選び直す" is the explicit way back rather
+  // than a stray paste silently swapping the staged image.
+  const handleFiles = useCallback(
+    (files: File[]) => {
+      if (files[0]) pickFile(files[0]);
+    },
+    [pickFile],
+  );
+  useImagePasteDrop(!file, handleFiles);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -149,42 +120,11 @@ export function AvatarImageModal({ avatarId, onClose, onUpdated }: Props) {
       onRequestClose={requestClose}
     >
       {!file || !url ? (
-        // biome-ignore lint/a11y/useSemanticElements: .drop is a block-level dropzone; a native <button> defaults to inline-block. role+tabIndex+onKeyDown cover keyboard access.
-        <div
-          className={dragOver ? "drop drag" : "drop"}
-          tabIndex={0}
-          role="button"
-          aria-label="画像を選択"
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              fileInputRef.current?.click();
-            }
-          }}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDragEnd={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const f = e.dataTransfer?.files?.[0];
-            if (f) pickFile(f);
-          }}
-        >
-          <div className="ico" aria-hidden="true">
-            <UploadIcon />
-          </div>
-          <div className="big">ドラッグ / クリック / ペーストで画像を追加</div>
-          <div className="sub">PNG · JPEG · WebP / 最大 10 MB / 1 枚のみ</div>
-        </div>
+        <ImageDropZone
+          multiple={false}
+          subLabel="PNG · JPEG · WebP / 最大 10 MB / 1 枚のみ"
+          onFiles={handleFiles}
+        />
       ) : (
         <form onSubmit={handleSubmit}>
           <button
@@ -217,17 +157,6 @@ export function AvatarImageModal({ avatarId, onClose, onUpdated }: Props) {
           {error ? <p className="mstatus err">{error}</p> : null}
         </form>
       )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPT}
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) pickFile(f);
-          e.target.value = "";
-        }}
-      />
     </Modal>
   );
 }

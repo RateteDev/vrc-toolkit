@@ -31,7 +31,9 @@ export function CardModal({
 }: {
   userId: string | null;
   onClose: () => void;
-  onNoteSaved: () => void;
+  // Fired with the persisted note after a successful upsert, so the caller
+  // can update its list locally instead of refetching.
+  onNoteSaved: (userId: string, note: string) => void;
 }) {
   const client = useVrc();
   const [phase, setPhase] = useState<Phase>("idle");
@@ -90,7 +92,7 @@ export function CardModal({
         setCard((c) => (c ? { ...c, note: saved } : c));
         setNoteStatus("保存しました。");
         setSaving(false);
-        onNoteSaved();
+        onNoteSaved(userId, saved);
       })
       .catch((e: unknown) => {
         setNoteStatus(`ネットワークエラー: ${e instanceof Error ? e.message : String(e)}`);

@@ -71,7 +71,7 @@ export function JoinView() {
       <CardModal
         userId={openUserId}
         onClose={() => setOpenUserId(null)}
-        onNoteSaved={() => friendsStore.load(client)}
+        onNoteSaved={(userId, note) => friendsStore.updateNote(userId, note)}
       />
     </section>
   );

@@ -299,7 +299,7 @@ footer .sep { opacity: .5; margin: 0 7px; }
 .sheet h2 { font-family: var(--serif); font-weight: 500; font-size: 19px; margin: 0; }
 .sheet .shead .ix { color: var(--faint); font-size: 13px; font-weight: 600; }
 .sheet .hint { color: var(--faint); font-size: 13px; margin: 0 0 15px; }
-.close { position: absolute; right: 14px; top: 13px; width: 30px; height: 30px; border: 1px solid var(--border); background: #fcfaf4; border-radius: 9px; color: var(--muted); font-size: 17px; line-height: 1; cursor: pointer; }
+.close { position: absolute; right: 12px; top: 11px; width: 32px; height: 32px; border: none; background: none; border-radius: 50%; color: var(--muted); font-size: 19px; line-height: 1; cursor: pointer; }
 .close:hover { background: var(--accent-tint); color: var(--accent-strong); }
 .crop { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-sm); overflow: hidden; background: #e9e3d6; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .crop:active { cursor: grabbing; }

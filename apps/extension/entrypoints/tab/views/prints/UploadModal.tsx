@@ -189,7 +189,7 @@ export function UploadModal({ onClose, onUploaded }: Props) {
       title="Print を投稿"
       hint="最大 20 枚 · タップして切り抜きと詳細を編集"
       onRequestClose={requestClose}
-      wide
+      sheetClass="upload-sheet"
     >
       <form onSubmit={handleSubmit}>
         {/* biome-ignore lint/a11y/useSemanticElements: .drop is a block-level dropzone; a native <button> defaults to inline-block. role+tabIndex+onKeyDown cover keyboard access. */}

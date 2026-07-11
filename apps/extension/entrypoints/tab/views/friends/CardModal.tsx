@@ -79,11 +79,15 @@ export function CardModal({
 
   const saveNote = () => {
     if (userId === null) return;
+    const saved = noteDraft;
     setSaving(true);
     setNoteStatus("保存中…");
     client.notes
-      .upsert({ targetUserId: userId, note: noteDraft })
+      .upsert({ targetUserId: userId, note: saved })
       .then(() => {
+        // Advance the dirty-check baseline to what was persisted so closing no
+        // longer prompts to discard. A later edit re-dirties against this value.
+        setCard((c) => (c ? { ...c, note: saved } : c));
         setNoteStatus("保存しました。");
         setSaving(false);
         onNoteSaved();

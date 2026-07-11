@@ -105,7 +105,7 @@ body {
 .pthumb { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
 .pover { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px; background: linear-gradient(transparent, rgba(20,15,10,.74)); color: #fff; }
 .pnote { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pdate { font-size: 11px; opacity: .82; }
+.pdate { font-size: 11px; opacity: .82; font-variant-numeric: tabular-nums; }
 .pworld { font-size: 11px; opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rotrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin: 8px 0; }
 .rotfield { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
@@ -138,7 +138,7 @@ body {
 .fmode-btn { font: inherit; font-weight: 600; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
 .fmode-btn:hover { border-color: var(--accent); color: var(--ink); }
 .fmode-btn.active { color: #fff; background: var(--accent); border-color: var(--accent); }
-.fmode-btn span { font-weight: 400; font-size: 12px; }
+.fmode-btn span { font-weight: 400; font-size: 12px; font-variant-numeric: tabular-nums; }
 .ftoggle { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
 .ftoggle input { accent-color: var(--accent); width: 15px; height: 15px; }
 .fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
@@ -184,6 +184,7 @@ body {
 .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; margin-bottom: 12px; }
 @media (max-width: 460px) { .card-meta { grid-template-columns: 1fr; } }
 .card-metalabel { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+.card-metaval { font-variant-numeric: tabular-nums; }
 .card-notestatus { font-size: 12px; color: var(--muted); margin-left: 8px; }
 .card-tagadd { display: flex; gap: 6px; margin-top: 8px; }
 .card-tagadd input { flex: 1; }
@@ -197,12 +198,12 @@ body {
 .arel.hidden { background: #ef5350; }
 .abody { padding: 9px 11px 11px; min-width: 0; }
 .aname { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.adate { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.adate { font-size: 11.5px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
 .aplats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .aplat { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; color: var(--accent-strong); background: var(--accent-tint); border-radius: 9px; padding: 2px 7px; white-space: nowrap; }
 .adesc { font-size: 12px; color: var(--muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ameta { display: flex; align-items: center; gap: 8px; }
-.aver { font-size: 11.5px; color: var(--muted); }
+.aver { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .aactions { display: flex; gap: 6px; margin-top: 8px; }
 .aactbtn { font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
 .aactbtn:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
@@ -238,7 +239,7 @@ body {
 .img-drop .sub { color: var(--faint); font-size: 13px; margin-top: 4px; }
 
 /* last-update (inline in .mhead) */
-.flast-update { color: var(--faint); font-size: 12px; margin-left: auto; }
+.flast-update { color: var(--faint); font-size: 12px; margin-left: auto; font-variant-numeric: tabular-nums; }
 
 /* view toggle */
 .view-toggle { display: inline-flex; gap: 2px; }
@@ -350,7 +351,7 @@ textarea { resize: vertical; min-height: 62px; }
 .selbtn:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
 .selbtn:disabled { opacity: .5; cursor: default; }
 .selbtn.stop { color: #fff; background: var(--err); border-color: var(--err); }
-.selinfo { font-size: 13px; font-weight: 600; color: var(--muted); }
+.selinfo { font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* select-mode print cards */
 .pcard.selected { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -373,7 +374,7 @@ textarea { resize: vertical; min-height: 62px; }
 .jbody { min-width: 0; flex: 1; padding-top: 1px; }
 .jhead { display: flex; align-items: center; gap: 8px; }
 .jname { font-family: var(--serif); font-weight: 500; font-size: 14.5px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.jcount { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; flex: none; }
+.jcount { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; flex: none; font-variant-numeric: tabular-nums; }
 .jmembers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .jchip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px 3px 3px; cursor: pointer; transition: border-color .14s, background .14s; }
 .jchip:hover { border-color: var(--accent); background: var(--accent-tint); }

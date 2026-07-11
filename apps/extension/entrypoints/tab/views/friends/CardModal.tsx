@@ -119,11 +119,11 @@ export function CardModal({
         <div className="card-meta">
           <div>
             <span className="card-metalabel">参加日</span>
-            <span>{card?.dateJoined || "—"}</span>
+            <span className="card-metaval">{card?.dateJoined || "—"}</span>
           </div>
           <div>
             <span className="card-metalabel">最終ログイン</span>
-            <span>{card?.lastLogin || "—"}</span>
+            <span className="card-metaval">{card?.lastLogin || "—"}</span>
           </div>
         </div>
         <div className="field">

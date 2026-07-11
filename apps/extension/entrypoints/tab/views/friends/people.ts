@@ -106,3 +106,20 @@ export function buildPeople(friends: FriendSummary[], rawNotes: RawUserNote[]): 
   });
   return list;
 }
+
+// Reflect a persisted note upsert into an existing people list without
+// refetching. Mirrors buildPeople's merge semantics: a note-only (offline)
+// row exists solely to show its note, so clearing the note removes the row,
+// exactly as a full reload would. Pure — returns a new list, never mutates.
+export function applyNoteUpdate(people: Person[], userId: string, note: string): Person[] {
+  const next: Person[] = [];
+  for (const p of people) {
+    if (p.userId !== userId) {
+      next.push(p);
+      continue;
+    }
+    if (!p.isOnline && note === "") continue;
+    next.push({ ...p, note });
+  }
+  return next;
+}

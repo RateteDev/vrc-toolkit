@@ -7,7 +7,7 @@
 import type { VrcClient } from "@vrc-toolkit/core";
 import { toFriendSummary } from "@vrc-toolkit/core/domain";
 import { useSyncExternalStore } from "react";
-import { buildPeople, type Person } from "./views/friends/people";
+import { applyNoteUpdate, buildPeople, type Person } from "./views/friends/people";
 
 export interface FriendsSnapshot {
   people: Person[];
@@ -80,20 +80,10 @@ class FriendsStore {
 
   // Reflect a persisted note upsert into the list without refetching: the
   // upsert response already confirms the value, so a reload would spend
-  // requests to learn what we know. Mirrors buildPeople's merge semantics —
-  // a note-only (offline) row exists solely to show its note, so clearing
-  // the note removes the row, exactly as a full reload would.
+  // requests to learn what we know. The merge rule lives in applyNoteUpdate
+  // (pure, unit-tested) next to buildPeople, whose semantics it mirrors.
   updateNote(userId: string, note: string): void {
-    const next: Person[] = [];
-    for (const p of this.people) {
-      if (p.userId !== userId) {
-        next.push(p);
-        continue;
-      }
-      if (!p.isOnline && note === "") continue;
-      next.push({ ...p, note });
-    }
-    this.people = next;
+    this.people = applyNoteUpdate(this.people, userId, note);
     this.emit();
   }
 }

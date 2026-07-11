@@ -118,7 +118,6 @@ export function BioLinkCards({ urls }: { urls: string[] }) {
         // A bio link is user-controlled: only follow http(s), matching the
         // markdown renderer. Other schemes (javascript:, data:) render as a
         // non-clickable tile. Keys are index-suffixed since bio links may repeat.
-        // biome-ignore lint/suspicious/noArrayIndexKey: bio links are a static, non-reordering display list; the index only disambiguates duplicate URLs.
         const key = `${url}-${i}`;
         return isHttpUrl(url) ? (
           <a

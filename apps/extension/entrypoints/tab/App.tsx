@@ -19,10 +19,10 @@ function SessionGate() {
     return (
       <main className="wrap">
         <header className="site-header rise d1">
-          <span className="brand">VRC Toolkit</span>
+          <h1 className="brand">VRC Toolkit</h1>
         </header>
-        <h1 className="view-title rise d1">ログインが必要です</h1>
         <div className="card rise d2">
+          <h2>ログインが必要です</h2>
           <p className="hint">VRChat にログインしてください</p>
           <a className="submit" href={LOGIN_URL} target="_blank" rel="noopener noreferrer">
             VRChat にログイン

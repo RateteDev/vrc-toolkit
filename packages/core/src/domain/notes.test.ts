@@ -156,6 +156,18 @@ describe("fmtCard", () => {
     expect(out.localTags).toEqual(["friend", "vrc"]);
   });
 
+  it("passes the raw timestamps through for relative-time display", () => {
+    const out = fmtCard(cardUser(), []);
+    expect(out.dateJoinedIso).toBe("2024-01-02");
+    expect(out.lastLoginIso).toBe("2026-06-10T12:00:00.000Z");
+  });
+
+  it("normalizes missing raw timestamps to ''", () => {
+    const out = fmtCard(cardUser({ date_joined: undefined, last_login: undefined }), []);
+    expect(out.dateJoinedIso).toBe("");
+    expect(out.lastLoginIso).toBe("");
+  });
+
   it("defensively parses an empty last_login / last_activity without throwing", () => {
     const out = fmtCard(cardUser({ last_login: "", last_activity: "" }), []);
     expect(out.lastLogin).toBe("");

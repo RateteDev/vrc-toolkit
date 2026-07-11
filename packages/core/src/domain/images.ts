@@ -1,5 +1,7 @@
 // Image-upload + inventory query validation (spec No.24 + No.25).
 
+import type { VRChatFile } from "../types";
+
 // VRChat image purpose tags accepted by POST /file/image. Static tags carry no
 // animation fields; the single animated tag ('emojianimated') requires them.
 export const IMAGE_TAGS = ["icon", "gallery", "sticker", "emoji", "emojianimated"] as const;
@@ -64,6 +66,17 @@ export function validateImageParams(input: ImageParamsInput): ValidatedImagePara
   if (input.loopStyle !== undefined) animation.loopStyle = input.loopStyle;
   if (input.maskTag !== undefined) animation.maskTag = input.maskTag;
   return { tag: "emojianimated", animation };
+}
+
+// Resolve a VRChatFile to its most recent version's URL. Used by the
+// avatar-image flow: POST /file/image -> latestFileUrl -> PUT /avatars/{id}
+// { imageUrl }. Returns null when there is no version or the version has no
+// url (e.g. still processing upstream).
+export function latestFileUrl(file: VRChatFile): string | null {
+  const versions = file.versions;
+  if (!versions || versions.length === 0) return null;
+  const last = versions[versions.length - 1];
+  return last?.file?.url ?? null;
 }
 
 // UI-selectable inventory type -> the /inventory `types=` query value.

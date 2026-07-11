@@ -19,12 +19,13 @@ const STATUS_CARDS: Array<{ value: VrcStatus; label: string }> = [
   { value: "offline", label: "offline" },
 ];
 
-const STATUS_PRESETS = ["作業中", "まったり", "通話中", "寝落ち", "AFK"];
+const STATUS_PRESETS = ["作業中", "仕事中", "イベント中", "約束あり", "ぶい睡", "AFK"];
 
 // Header widget: the account owner's avatar + a status dot, always visible so an
 // externally-changed status reads as stale immediately. Click opens a popover
 // that edits status (applied on select) and the status text (applied on Enter /
-// button). No separate GET: it rides the shared account context.
+// save button; presets only fill the field so nothing is sent by accident).
+// No separate GET: it rides the shared account context.
 export function HeaderStatus() {
   const { account } = useAccount();
   const [open, setOpen] = useState(false);
@@ -142,7 +143,7 @@ function StatusPopover() {
             onKeyDown={onTextKeyDown}
           />
           <button type="button" className="hpop-apply" disabled={busy} onClick={applyText}>
-            確定
+            保存
           </button>
         </div>
         <div className="spresets">
@@ -154,7 +155,7 @@ function StatusPopover() {
               disabled={busy}
               onClick={() => {
                 setText(preset);
-                apply({ statusDescription: preset });
+                inputRef.current?.focus();
               }}
             >
               {preset}

@@ -4,6 +4,7 @@ import {
   type FriendFilter,
   filterPeople,
   groupByWorld,
+  isPersonJoinable,
   sortPeople,
 } from "./organize";
 import type { Person } from "./people";
@@ -29,8 +30,6 @@ function person(over: Partial<Person>): Person {
 const baseFilter: FriendFilter = {
   search: "",
   presence: "all",
-  statuses: new Set(),
-  minTrust: 0,
 };
 
 describe("filterPeople", () => {
@@ -50,32 +49,10 @@ describe("filterPeople", () => {
     ).toEqual(["a", "c"]);
   });
 
-  test("presence=joinable keeps only joinable instances", () => {
-    // Carol is in a private instance → not joinable; Bob offline → not joinable.
-    expect(
-      filterPeople(people, { ...baseFilter, presence: "joinable" }).map((p) => p.userId),
-    ).toEqual(["a"]);
-  });
-
   test("search matches display name case-insensitively", () => {
     expect(filterPeople(people, { ...baseFilter, search: "car" }).map((p) => p.userId)).toEqual([
       "c",
     ]);
-  });
-
-  test("status set filters by raw status", () => {
-    expect(
-      filterPeople(people, { ...baseFilter, statuses: new Set(["join me"]) }).map((p) => p.userId),
-    ).toEqual(["a"]);
-  });
-
-  test("minTrust excludes ranks below the threshold", () => {
-    const known = person({ userId: "k", tags: ["system_trust_trusted"] }); // rank "known" (idx 3)
-    const newbie = person({ userId: "n", tags: ["system_trust_basic"] }); // rank "new" (idx 1)
-    // Threshold idx 3 (Known User+) keeps only the known user.
-    expect(
-      filterPeople([known, newbie], { ...baseFilter, minTrust: 3 }).map((p) => p.userId),
-    ).toEqual(["k"]);
   });
 });
 
@@ -120,12 +97,26 @@ describe("groupByWorld", () => {
 });
 
 describe("countByPresence", () => {
-  test("counts joinable/online/all", () => {
+  test("counts online/all", () => {
     const people = [
       person({ status: "join me" }),
       person({ isOnline: false, location: "offline" }),
       person({ location: "wrld_x:1~private(usr_a)" }),
     ];
-    expect(countByPresence(people)).toEqual({ joinable: 1, online: 2, all: 3 });
+    expect(countByPresence(people)).toEqual({ online: 2, all: 3 });
+  });
+});
+
+describe("isPersonJoinable", () => {
+  test("true for an online friend in a public/friends/hidden instance", () => {
+    expect(isPersonJoinable(person({ location: "wrld_a:1~region(jp)" }))).toBe(true);
+  });
+
+  test("false for an offline friend", () => {
+    expect(isPersonJoinable(person({ isOnline: false, location: "offline" }))).toBe(false);
+  });
+
+  test("false for a friend in a private instance", () => {
+    expect(isPersonJoinable(person({ location: "wrld_x:1~private(usr_a)" }))).toBe(false);
   });
 });

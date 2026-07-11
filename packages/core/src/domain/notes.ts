@@ -105,6 +105,9 @@ export interface Card {
   pronouns: string;
   dateJoined: string;
   lastLogin: string;
+  // Raw API timestamps (untouched), for relative-time display in UIs.
+  dateJoinedIso: string;
+  lastLoginIso: string;
   tags: string[];
   imageUrl: string | null;
   note: string;
@@ -129,6 +132,8 @@ export function fmtCard(user: RawCardUser, localTags: string[]): Card {
     pronouns: user.pronouns ? user.pronouns : "",
     dateJoined: fmtDate(user.date_joined),
     lastLogin: fmtDate(user.last_login),
+    dateJoinedIso: user.date_joined ? user.date_joined : "",
+    lastLoginIso: user.last_login ? user.last_login : "",
     tags: systemTags,
     imageUrl: user.profilePicOverride
       ? user.profilePicOverride

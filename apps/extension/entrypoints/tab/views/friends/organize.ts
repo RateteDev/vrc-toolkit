@@ -1,24 +1,15 @@
 // Pure filter / sort / group logic for the friends list. Network-free and
 // UI-free so it can be unit-tested in isolation.
 
-import {
-  deriveTrustRank,
-  isJoinable,
-  parseLocation,
-  TRUST_RANK_ORDER,
-} from "@vrc-toolkit/core/domain";
+import { isJoinable, parseLocation } from "@vrc-toolkit/core/domain";
 import type { Person } from "./people";
 
-export type PresenceFilter = "joinable" | "online" | "all";
+export type PresenceFilter = "online" | "all";
 export type SortMode = "default" | "name" | "status";
 
 export interface FriendFilter {
   search: string;
   presence: PresenceFilter;
-  // Selected raw status strings (e.g. "join me"). Empty = no status constraint.
-  statuses: Set<string>;
-  // Minimum trust rank as an index into TRUST_RANK_ORDER; 0 = include all.
-  minTrust: number;
 }
 
 // Presence-status sort priority (join me first, offline last), mirroring how
@@ -34,32 +25,22 @@ export function isPersonJoinable(p: Person): boolean {
   return p.isOnline && isJoinable(parseLocation(p.location));
 }
 
-export function personTrustIndex(p: Person): number {
-  return TRUST_RANK_ORDER.indexOf(deriveTrustRank(p.tags));
-}
-
 export function countByPresence(people: Person[]): {
-  joinable: number;
   online: number;
   all: number;
 } {
-  let joinable = 0;
   let online = 0;
   for (const p of people) {
     if (p.isOnline) online++;
-    if (isPersonJoinable(p)) joinable++;
   }
-  return { joinable, online, all: people.length };
+  return { online, all: people.length };
 }
 
 export function filterPeople(people: Person[], f: FriendFilter): Person[] {
   const needle = f.search.trim().toLowerCase();
   return people.filter((p) => {
     if (f.presence === "online" && !p.isOnline) return false;
-    if (f.presence === "joinable" && !isPersonJoinable(p)) return false;
     if (needle && !p.displayName.toLowerCase().includes(needle)) return false;
-    if (f.statuses.size > 0 && !f.statuses.has(p.status)) return false;
-    if (f.minTrust > 0 && personTrustIndex(p) < f.minTrust) return false;
     return true;
   });
 }

@@ -13,6 +13,7 @@ export interface AuthUserResponse {
   location?: string;
   currentAvatarImageUrl?: string | null;
   currentAvatarThumbnailImageUrl?: string | null;
+  currentAvatar?: string;
 }
 
 export interface TwoFactorVerifyResponse {
@@ -44,6 +45,15 @@ export interface VRChatFriend {
 export interface VRChatWorld {
   id?: string;
   name?: string;
+  imageUrl?: string | null;
+  thumbnailImageUrl?: string | null;
+}
+
+// Minimal shape of a VRChat File object (POST /file/image response, GET
+// /file/{fileId}), only the fields needed to resolve the latest version's URL.
+export interface VRChatFile {
+  id?: string;
+  versions?: Array<{ file?: { url?: string } }>;
 }
 
 export interface PrintUploadResponse {

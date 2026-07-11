@@ -1,29 +1,15 @@
+import { PRINT_HEIGHT, PRINT_WIDTH } from "@vrc-toolkit/core/domain";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ImageDropZone, useImagePasteDrop } from "../../components/ImageDropZone";
 import { Modal } from "../../components/Modal";
+import { useObjectUrlCleanup } from "../../objectUrls";
 import { useVrc } from "../../vrc";
+import { cropToBlob, PRINT_ASPECT, PRINT_OUTPUT_QUALITY, PRINT_OUTPUT_TYPE } from "../canvas";
 import { cssUrl } from "../cssUrl";
+import { errorMessage } from "../errorMessage";
 import { CropModal } from "./CropModal";
-import { cropToPrintBlob, PRINT_ASPECT } from "./canvas";
-import { errorMessage } from "./errorMessage";
-import { UploadIcon } from "./icons";
 import { cropThumbStyle } from "./thumbStyle";
 import { MAX_UPLOAD_ITEMS, type UploadItem } from "./types";
-
-const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
-
-function extractImageFiles(e: ClipboardEvent): File[] {
-  const cd = e.clipboardData;
-  if (!cd?.items) return [];
-  const out: File[] = [];
-  for (let i = 0; i < cd.items.length; i++) {
-    const item = cd.items[i];
-    if (item.kind === "file" && item.type.startsWith("image/")) {
-      const f = item.getAsFile();
-      if (f) out.push(f);
-    }
-  }
-  return out;
-}
 
 interface Props {
   onClose: () => void;
@@ -39,7 +25,6 @@ export function UploadModal({ onClose, onUploaded }: Props) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [hitLimit, setHitLimit] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const seqRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,8 +33,9 @@ export function UploadModal({ onClose, onUploaded }: Props) {
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
+  useObjectUrlCleanup(() => itemsRef.current.map((it) => it.url));
 
-  const addFiles = useCallback((files: FileList | File[]) => {
+  const addFiles = useCallback((files: File[]) => {
     const additions: UploadItem[] = [];
     let count = itemsRef.current.length;
     let limited = false;
@@ -93,27 +79,9 @@ export function UploadModal({ onClose, onUploaded }: Props) {
     }
   }, []);
 
-  // Paste + drop are handled only while the modal is open. Without the global
-  // dragover/drop guard a stray drop navigates the tab to the file.
-  useEffect(() => {
-    const onPaste = (e: ClipboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase() ?? "";
-      if (tag === "input" || tag === "textarea") return;
-      const files = extractImageFiles(e);
-      if (!files.length) return;
-      e.preventDefault();
-      addFiles(files);
-    };
-    const preventNav = (e: DragEvent) => e.preventDefault();
-    document.addEventListener("paste", onPaste);
-    window.addEventListener("dragover", preventNav);
-    window.addEventListener("drop", preventNav);
-    return () => {
-      document.removeEventListener("paste", onPaste);
-      window.removeEventListener("dragover", preventNav);
-      window.removeEventListener("drop", preventNav);
-    };
-  }, [addFiles]);
+  // Paste + drop are accepted for the whole time the modal is open: batch
+  // staging can always take more images (addFiles enforces the item limit).
+  useImagePasteDrop(true, addFiles);
 
   function removeItem(id: number) {
     const it = itemsRef.current.find((x) => x.id === id);
@@ -134,7 +102,13 @@ export function UploadModal({ onClose, onUploaded }: Props) {
       if (!itemsRef.current.some((x) => x.id === it.id)) continue;
       setItems((prev) => prev.map((x) => (x.id === it.id ? { ...x, status: "uploading" } : x)));
       try {
-        const blob = await cropToPrintBlob(it, it.file);
+        const blob = await cropToBlob(it, it.file, {
+          aspect: PRINT_ASPECT,
+          outputWidth: PRINT_WIDTH,
+          outputHeight: PRINT_HEIGHT,
+          type: PRINT_OUTPUT_TYPE,
+          quality: PRINT_OUTPUT_QUALITY,
+        });
         const res = await client.prints.upload({
           image: blob,
           filename: "print.jpg",
@@ -182,44 +156,15 @@ export function UploadModal({ onClose, onUploaded }: Props) {
       title="Print を投稿"
       hint="最大 20 枚 · タップして切り抜きと詳細を編集"
       onRequestClose={requestClose}
-      wide
+      sheetClass="upload-sheet"
     >
       <form onSubmit={handleSubmit}>
-        {/* biome-ignore lint/a11y/useSemanticElements: .drop is a block-level dropzone; a native <button> defaults to inline-block. role+tabIndex+onKeyDown cover keyboard access. */}
-        <div
-          className={dragOver ? "drop drag" : "drop"}
-          tabIndex={0}
-          role="button"
-          aria-label="画像を選択"
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              fileInputRef.current?.click();
-            }
-          }}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDragEnd={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            if (e.dataTransfer?.files.length) addFiles(e.dataTransfer.files);
-          }}
-        >
-          <div className="ico" aria-hidden="true">
-            <UploadIcon />
-          </div>
-          <div className="big">ドラッグ / クリック / ペーストで画像を追加</div>
-          <div className="sub">PNG · JPEG · WebP / 最大 10 MB · 複数可 · Ctrl+V 対応</div>
-        </div>
+        <ImageDropZone
+          multiple={true}
+          subLabel="PNG · JPEG · WebP / 最大 10 MB · 複数可 · Ctrl+V 対応"
+          onFiles={addFiles}
+          inputRef={fileInputRef}
+        />
         <div className={items.length ? "gallery on" : "gallery"}>
           {items.map((it, idx) => (
             // biome-ignore lint/a11y/useSemanticElements: .thumb nests a delete <button>; buttons can't nest.
@@ -293,17 +238,6 @@ export function UploadModal({ onClose, onUploaded }: Props) {
         <p className="limit" hidden={!hitLimit}>
           画像は最大 20 枚までです。
         </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPT}
-          multiple
-          hidden
-          onChange={(e) => {
-            if (e.target.files) addFiles(e.target.files);
-            e.target.value = "";
-          }}
-        />
         <button
           type="submit"
           className={submitting ? "submit loading" : "submit"}
@@ -319,6 +253,8 @@ export function UploadModal({ onClose, onUploaded }: Props) {
           item={activeItem}
           index={activeIndex}
           total={items.length}
+          aspect={PRINT_ASPECT}
+          hint="ドラッグで位置、スライダーで拡大。枠内（16:9）が Print になります。"
           onChange={(patch) =>
             setItems((prev) => prev.map((x) => (x.id === activeItem.id ? { ...x, ...patch } : x)))
           }

@@ -1,5 +1,14 @@
-import { type Card, deriveTrustRank, fmtCard, TRUST_RANK_LABELS } from "@vrc-toolkit/core/domain";
-import { useEffect, useState } from "react";
+import {
+  type Card,
+  deriveTrustRank,
+  fmtCard,
+  fmtDateTime,
+  fmtRelative,
+  TRUST_RANK_LABELS,
+} from "@vrc-toolkit/core/domain";
+import { useCallback, useEffect, useState } from "react";
+import { Modal } from "../../components/Modal";
+import { statusDotClass } from "../../status";
 import { trustClass } from "../../trust";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
@@ -8,6 +17,13 @@ import { renderMd } from "./markdown";
 
 type Phase = "idle" | "loading" | "loaded" | "error";
 
+// Recent instants read as "3時間前（2026/07/12 09:00）"; older ones fall back
+// to the pre-formatted absolute date.
+function fmtWhen(iso: string, absolute: string): string {
+  const rel = fmtRelative(iso, new Date());
+  return rel ? `${rel}（${fmtDateTime(iso)}）` : absolute;
+}
+
 export function CardModal({
   userId,
   onClose,
@@ -15,7 +31,9 @@ export function CardModal({
 }: {
   userId: string | null;
   onClose: () => void;
-  onNoteSaved: () => void;
+  // Fired with the persisted note after a successful upsert, so the caller
+  // can update its list locally instead of refetching.
+  onNoteSaved: (userId: string, note: string) => void;
 }) {
   const client = useVrc();
   const [phase, setPhase] = useState<Phase>("idle");
@@ -25,7 +43,9 @@ export function CardModal({
   const [noteStatus, setNoteStatus] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  // Shared by the open effect and the refresh button; resets everything so a
+  // refresh behaves exactly like reopening the card.
+  const load = useCallback(() => {
     if (userId === null) return;
     setPhase("loading");
     setErrorMessage("");
@@ -55,16 +75,24 @@ export function CardModal({
       });
   }, [client, userId]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const saveNote = () => {
     if (userId === null) return;
+    const saved = noteDraft;
     setSaving(true);
     setNoteStatus("保存中…");
     client.notes
-      .upsert({ targetUserId: userId, note: noteDraft })
+      .upsert({ targetUserId: userId, note: saved })
       .then(() => {
+        // Advance the dirty-check baseline to what was persisted so closing no
+        // longer prompts to discard. A later edit re-dirties against this value.
+        setCard((c) => (c ? { ...c, note: saved } : c));
         setNoteStatus("保存しました。");
         setSaving(false);
-        onNoteSaved();
+        onNoteSaved(userId, saved);
       })
       .catch((e: unknown) => {
         setNoteStatus(`ネットワークエラー: ${e instanceof Error ? e.message : String(e)}`);
@@ -83,75 +111,106 @@ export function CardModal({
   // card has loaded; the label is spelled out for color-vision accessibility.
   const trustRank = card ? deriveTrustRank(card.tags) : null;
 
+  if (userId === null) return null;
+
+  // Backdrop click / Esc / refresh must not silently discard an unsaved note edit.
+  const noteDirty = phase === "loaded" && card !== null && noteDraft !== card.note;
+  const requestClose = () => {
+    if (noteDirty && !window.confirm("編集中のノートがあります。破棄して閉じますか？")) return;
+    onClose();
+  };
+  const refresh = () => {
+    if (noteDirty && !window.confirm("編集中のノートがあります。破棄して更新しますか？")) return;
+    load();
+  };
+
   return (
-    <div
-      className="modal"
-      hidden={userId === null}
-      role="dialog"
-      aria-modal="true"
-      aria-label="名刺"
-    >
-      <div className="sheet card-sheet">
-        <button type="button" className="close" onClick={onClose} aria-label="閉じる">
-          ×
-        </button>
-        <div className="card-head">
-          <div
-            className="card-avatar"
-            style={card?.imageUrl ? { backgroundImage: cssUrl(card.imageUrl) } : undefined}
+    <Modal ariaLabel="名刺" sheetClass="card-sheet" onRequestClose={requestClose}>
+      <button
+        type="button"
+        className="card-refresh"
+        onClick={refresh}
+        disabled={phase === "loading"}
+        aria-label="情報を更新"
+        title="情報を更新"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          <div className="card-headtext">
-            <h2 className={trustRank ? `card-name ${trustClass(trustRank)}` : "card-name"}>
-              {headline}
-            </h2>
-            {trustRank ? (
-              <span className={`trustbadge ${trustClass(trustRank)}`}>
-                {TRUST_RANK_LABELS[trustRank]}
-              </span>
-            ) : null}
-            <div className="card-status">{card ? card.statusDescription || card.status : ""}</div>
-            <div className="card-pronouns">{card?.pronouns ?? ""}</div>
-          </div>
+        </svg>
+      </button>
+      <div className="card-head">
+        <div
+          className="card-avatar"
+          style={card?.imageUrl ? { backgroundImage: cssUrl(card.imageUrl) } : undefined}
+        >
+          {card ? <span className={`fdot card-dot ${statusDotClass(card.status)}`} /> : null}
         </div>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: renderMd escapes &/</> before emitting any markup, so the only HTML present is generated by us */}
-        <p className="card-bio" dangerouslySetInnerHTML={{ __html: renderMd(card?.bio ?? "") }} />
-        <BioLinkCards urls={card?.bioLinks ?? []} />
-        <div className="card-meta">
-          <div>
-            <span className="card-metalabel">参加日</span>
-            <span>{card?.dateJoined || "—"}</span>
-          </div>
-          <div>
-            <span className="card-metalabel">最終ログイン</span>
-            <span>{card?.lastLogin || "—"}</span>
-          </div>
+        <div className="card-headtext">
+          <h2 className={trustRank ? `card-name ${trustClass(trustRank)}` : "card-name"}>
+            {headline}
+          </h2>
+          {trustRank ? (
+            <span className={`trustbadge ${trustClass(trustRank)}`}>
+              {TRUST_RANK_LABELS[trustRank]}
+            </span>
+          ) : null}
+          <div className="card-status">{card ? card.statusDescription || card.status : ""}</div>
         </div>
-        <div className="field">
-          <label htmlFor="cardNote">自分のノート</label>
-          <textarea
-            id="cardNote"
-            placeholder="このユーザーについて…"
-            value={noteDraft}
-            onChange={(e) => setNoteDraft(e.target.value)}
-            disabled={phase !== "loaded"}
-          />
-          <button
-            type="button"
-            className="card-save"
-            onClick={saveNote}
-            disabled={phase !== "loaded" || saving}
-          >
-            ノートを保存
-          </button>
-          <span className="card-notestatus">{noteStatus}</span>
-        </div>
-        {/*
-          The old "ローカルタグ" editor (add/remove chips) lived here, backed by
-          a server-side D1 table. The extension has no server DB and
-          client-side persistence (IndexedDB / storage) is out of scope this
-          stage, so it is intentionally omitted.
-        */}
       </div>
-    </div>
+      <div className="card-meta">
+        <div>
+          <span className="card-metalabel">参加日</span>
+          <span className="card-metaval">
+            {card ? fmtWhen(card.dateJoinedIso, card.dateJoined) || "—" : "—"}
+          </span>
+        </div>
+        <div>
+          <span className="card-metalabel">最終ログイン</span>
+          <span className="card-metaval">
+            {card ? fmtWhen(card.lastLoginIso, card.lastLogin) || "—" : "—"}
+          </span>
+        </div>
+        {card?.pronouns ? (
+          <div>
+            <span className="card-metalabel">代名詞</span>
+            <span className="card-metaval">{card.pronouns}</span>
+          </div>
+        ) : null}
+      </div>
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: renderMd escapes &/</> before emitting any markup, so the only HTML present is generated by us */}
+      <p className="card-bio" dangerouslySetInnerHTML={{ __html: renderMd(card?.bio ?? "") }} />
+      <BioLinkCards urls={card?.bioLinks ?? []} />
+      <div className="field">
+        <label htmlFor="cardNote">自分のノート</label>
+        <textarea
+          id="cardNote"
+          placeholder="このユーザーについて…"
+          value={noteDraft}
+          onChange={(e) => setNoteDraft(e.target.value)}
+          disabled={phase !== "loaded"}
+        />
+        <button
+          type="button"
+          className="card-save"
+          onClick={saveNote}
+          disabled={phase !== "loaded" || saving}
+        >
+          ノートを保存
+        </button>
+        <span className="card-notestatus">{noteStatus}</span>
+      </div>
+      {/*
+        The old "ローカルタグ" editor (add/remove chips) lived here, backed by
+        a server-side D1 table. The extension has no server DB and
+        client-side persistence (IndexedDB / storage) is out of scope this
+        stage, so it is intentionally omitted.
+      */}
+    </Modal>
   );
 }

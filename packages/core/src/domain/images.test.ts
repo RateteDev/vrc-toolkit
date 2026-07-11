@@ -6,10 +6,12 @@
 //   - fmtInventoryItem: tolerant of empty data / missing fields.
 
 import { describe, expect, it } from "bun:test";
+import type { VRChatFile } from "../types";
 import {
   fmtInventoryItem,
   type ImageParamsInput,
   inventoryQuery,
+  latestFileUrl,
   validateImageParams,
 } from "./images";
 
@@ -163,5 +165,31 @@ describe("fmtInventoryItem", () => {
     expect(out.itemType).toBe("");
     expect(out.createdAt).toBe("");
     expect(out.imageUrl).toBeNull();
+  });
+});
+
+describe("latestFileUrl", () => {
+  it("returns the last version's file.url", () => {
+    const file: VRChatFile = {
+      id: "file_1",
+      versions: [{ file: { url: "https://x/v0" } }, { file: { url: "https://x/v1" } }],
+    };
+    expect(latestFileUrl(file)).toBe("https://x/v1");
+  });
+
+  it("returns null when versions is empty", () => {
+    expect(latestFileUrl({ id: "file_1", versions: [] })).toBeNull();
+  });
+
+  it("returns null when versions is missing", () => {
+    expect(latestFileUrl({ id: "file_1" })).toBeNull();
+  });
+
+  it("returns null when the last version has no file", () => {
+    expect(latestFileUrl({ versions: [{ file: { url: "https://x/v0" } }, {}] })).toBeNull();
+  });
+
+  it("returns null when the last version's file has no url", () => {
+    expect(latestFileUrl({ versions: [{ file: {} }] })).toBeNull();
   });
 });

@@ -4,15 +4,17 @@ import { useEffect } from "react";
 interface Props {
   title?: string;
   hint?: string;
+  // Accessible dialog name when no visible title is rendered.
+  ariaLabel?: string;
   // Invoked by Esc, the close button, and a backdrop click. The caller owns the
   // guard (e.g. confirm before discarding staged files), so this is a *request*
   // to close, not an unconditional close.
   onRequestClose: () => void;
-  wide?: boolean;
+  sheetClass?: string;
   children: ReactNode;
 }
 
-export function Modal({ title, hint, onRequestClose, wide, children }: Props) {
+export function Modal({ title, hint, ariaLabel, onRequestClose, sheetClass, children }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onRequestClose();
@@ -26,12 +28,12 @@ export function Modal({ title, hint, onRequestClose, wide, children }: Props) {
       className="modal"
       role="dialog"
       aria-modal="true"
-      aria-label={title ?? "ダイアログ"}
+      aria-label={title ?? ariaLabel ?? "ダイアログ"}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onRequestClose();
       }}
     >
-      <div className={wide ? "sheet upload-sheet" : "sheet"}>
+      <div className={sheetClass ? `sheet ${sheetClass}` : "sheet"}>
         <button type="button" className="close" onClick={onRequestClose} aria-label="閉じる">
           ×
         </button>

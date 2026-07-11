@@ -232,18 +232,6 @@ body {
 .vtog:hover { color: var(--ink); border-color: var(--accent); }
 .vtog.active { color: var(--accent-strong); background: var(--accent-tint); border-color: var(--accent); }
 
-/* ---- view modes: large card (1 per row) ---- */
-.pgrid.view-lg { grid-template-columns: 1fr; }
-.fgrid.view-lg { grid-template-columns: 1fr; }
-.agrid.view-lg { grid-template-columns: 1fr; }
-
-/* ---- view modes: small card ---- */
-.pgrid.view-sm { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-.fgrid.view-sm { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-.fgrid.view-sm .fnote, .fgrid.view-sm .ftags, .fgrid.view-sm .fjoin { display: none; }
-.agrid.view-sm { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-.agrid.view-sm .adate { display: none; }
-
 /* ---- view modes: list ---- */
 .pgrid.view-list { grid-template-columns: 1fr; gap: 6px; }
 .pgrid.view-list .pcard { aspect-ratio: auto; display: flex; flex-direction: row; border-radius: 10px; }
@@ -358,14 +346,9 @@ textarea { resize: vertical; min-height: 62px; }
 .grpbtn:hover { border-color: var(--accent); color: var(--ink); }
 .grpbtn.active { color: #fff; background: var(--accent); border-color: var(--accent); }
 .ffilters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-.ffilters.second { margin-top: 10px; }
 .fsearch { flex: 1 1 200px; min-width: 160px; font: inherit; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 10px; background: #fcfaf4; }
 .fsearch:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
-.fsort, .ftrust { font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); cursor: pointer; }
-.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
-.fchip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; cursor: pointer; transition: border-color .14s, background .14s, color .14s; }
-.fchip:hover { border-color: var(--accent); }
-.fchip.active { color: var(--ink); background: var(--accent-tint); border-color: var(--accent); }
+.fsort { font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); cursor: pointer; }
 
 /* friends: world grouping */
 .fgroups { display: flex; flex-direction: column; gap: 18px; margin-top: 14px; }

@@ -1,12 +1,10 @@
 import { type PrintSummary, sortPrints, toPrintSummary } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LastUpdated } from "../../components/LastUpdated";
+import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
 import { errorMessage } from "./errorMessage";
-import { ViewLargeIcon, ViewListIcon, ViewSmallIcon } from "./icons";
 import { PrintCard } from "./PrintCard";
-
-type ViewMode = "list" | "sm" | "lg";
 
 // Inter-request delay between bulk DELETEs. Writes carry more BAN risk than
 // reads, so a bulk "全選択 → 削除" must not fire back-to-back at network speed.
@@ -32,7 +30,7 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
   const [prints, setPrints] = useState<PrintSummary[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("lg");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Multi-select delete state.
@@ -140,32 +138,7 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
       <div className="mhead">
         <h2>Print 一覧</h2>
         <LastUpdated at={lastUpdate} />
-        <div className="view-toggle">
-          <button
-            type="button"
-            className={viewMode === "list" ? "vtog active" : "vtog"}
-            aria-label="リスト表示"
-            onClick={() => setViewMode("list")}
-          >
-            <ViewListIcon />
-          </button>
-          <button
-            type="button"
-            className={viewMode === "sm" ? "vtog active" : "vtog"}
-            aria-label="小カード表示"
-            onClick={() => setViewMode("sm")}
-          >
-            <ViewSmallIcon />
-          </button>
-          <button
-            type="button"
-            className={viewMode === "lg" ? "vtog active" : "vtog"}
-            aria-label="大カード表示"
-            onClick={() => setViewMode("lg")}
-          >
-            <ViewLargeIcon />
-          </button>
-        </div>
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
         <button type="button" className="refresh" onClick={load} disabled={busy}>
           更新
         </button>

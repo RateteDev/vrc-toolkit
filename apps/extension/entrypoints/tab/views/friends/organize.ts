@@ -1,12 +1,7 @@
 // Pure filter / sort / group logic for the friends list. Network-free and
 // UI-free so it can be unit-tested in isolation.
 
-import {
-  deriveTrustRank,
-  isJoinable,
-  parseLocation,
-  TRUST_RANK_ORDER,
-} from "@vrc-toolkit/core/domain";
+import { isJoinable, parseLocation } from "@vrc-toolkit/core/domain";
 import type { Person } from "./people";
 
 export type PresenceFilter = "joinable" | "online" | "all";
@@ -15,10 +10,6 @@ export type SortMode = "default" | "name" | "status";
 export interface FriendFilter {
   search: string;
   presence: PresenceFilter;
-  // Selected raw status strings (e.g. "join me"). Empty = no status constraint.
-  statuses: Set<string>;
-  // Minimum trust rank as an index into TRUST_RANK_ORDER; 0 = include all.
-  minTrust: number;
 }
 
 // Presence-status sort priority (join me first, offline last), mirroring how
@@ -32,10 +23,6 @@ const STATUS_PRIORITY: Record<string, number> = {
 
 export function isPersonJoinable(p: Person): boolean {
   return p.isOnline && isJoinable(parseLocation(p.location));
-}
-
-export function personTrustIndex(p: Person): number {
-  return TRUST_RANK_ORDER.indexOf(deriveTrustRank(p.tags));
 }
 
 export function countByPresence(people: Person[]): {
@@ -58,8 +45,6 @@ export function filterPeople(people: Person[], f: FriendFilter): Person[] {
     if (f.presence === "online" && !p.isOnline) return false;
     if (f.presence === "joinable" && !isPersonJoinable(p)) return false;
     if (needle && !p.displayName.toLowerCase().includes(needle)) return false;
-    if (f.statuses.size > 0 && !f.statuses.has(p.status)) return false;
-    if (f.minTrust > 0 && personTrustIndex(p) < f.minTrust) return false;
     return true;
   });
 }

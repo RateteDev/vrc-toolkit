@@ -2,16 +2,9 @@ import { VrcError } from "@vrc-toolkit/core";
 import { type AvatarSummary, fmtAvatar, fmtDate } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
 import { LastUpdated } from "../../components/LastUpdated";
+import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
-
-type ViewMode = "list" | "sm" | "lg";
-
-const VIEW_MODES: Array<{ mode: ViewMode; label: string }> = [
-  { mode: "list", label: "リスト表示" },
-  { mode: "sm", label: "小カード表示" },
-  { mode: "lg", label: "大カード表示" },
-];
 
 function describeError(err: unknown): string {
   if (err instanceof VrcError) {
@@ -31,7 +24,7 @@ export function AvatarsGrid() {
   const [avatars, setAvatars] = useState<AvatarSummary[]>([]);
   const [message, setMessage] = useState("読み込み中…");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("sm");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
 
   // One request per load: listAll pages GET /avatars?user=me&releaseStatus=all to
   // exhaustion internally, still a single user-initiated action.
@@ -64,19 +57,7 @@ export function AvatarsGrid() {
         <div className="mhead">
           <h2>マイアバター</h2>
           <LastUpdated at={lastUpdate} />
-          <div className="view-toggle">
-            {VIEW_MODES.map(({ mode, label }) => (
-              <button
-                key={mode}
-                type="button"
-                className={mode === viewMode ? "vtog active" : "vtog"}
-                aria-label={label}
-                onClick={() => setViewMode(mode)}
-              >
-                <ViewModeIcon mode={mode} />
-              </button>
-            ))}
-          </div>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
           <button type="button" className="refresh" onClick={load}>
             更新
           </button>
@@ -109,37 +90,5 @@ export function AvatarsGrid() {
         </div>
       </section>
     </section>
-  );
-}
-
-function ViewModeIcon({ mode }: { mode: ViewMode }) {
-  if (mode === "list") {
-    return (
-      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-        <path
-          d="M1 3h12M1 7h12M1 11h12"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </svg>
-    );
-  }
-  if (mode === "lg") {
-    return (
-      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-        <rect x="1" y="1" width="12" height="5" rx="1" fill="currentColor" />
-        <rect x="1" y="8" width="12" height="5" rx="1" fill="currentColor" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-      <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" />
-      <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" />
-      <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" />
-      <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" />
-    </svg>
   );
 }

@@ -29,8 +29,6 @@ function person(over: Partial<Person>): Person {
 const baseFilter: FriendFilter = {
   search: "",
   presence: "all",
-  statuses: new Set(),
-  minTrust: 0,
 };
 
 describe("filterPeople", () => {
@@ -61,21 +59,6 @@ describe("filterPeople", () => {
     expect(filterPeople(people, { ...baseFilter, search: "car" }).map((p) => p.userId)).toEqual([
       "c",
     ]);
-  });
-
-  test("status set filters by raw status", () => {
-    expect(
-      filterPeople(people, { ...baseFilter, statuses: new Set(["join me"]) }).map((p) => p.userId),
-    ).toEqual(["a"]);
-  });
-
-  test("minTrust excludes ranks below the threshold", () => {
-    const known = person({ userId: "k", tags: ["system_trust_trusted"] }); // rank "known" (idx 3)
-    const newbie = person({ userId: "n", tags: ["system_trust_basic"] }); // rank "new" (idx 1)
-    // Threshold idx 3 (Known User+) keeps only the known user.
-    expect(
-      filterPeople([known, newbie], { ...baseFilter, minTrust: 3 }).map((p) => p.userId),
-    ).toEqual(["k"]);
   });
 });
 

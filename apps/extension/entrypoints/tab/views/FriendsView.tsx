@@ -1,11 +1,7 @@
-import {
-  parseLocation,
-  TRUST_RANK_LABELS,
-  TRUST_RANK_ORDER,
-  toFriendSummary,
-} from "@vrc-toolkit/core/domain";
+import { parseLocation, toFriendSummary } from "@vrc-toolkit/core/domain";
 import { useEffect, useMemo, useState } from "react";
 import { LastUpdated } from "../components/LastUpdated";
+import { type ViewMode, ViewToggle } from "../components/ViewToggle";
 import { useVrc } from "../vrc";
 import { useWorldNames, worldNameStore } from "../worldNames";
 import { CardModal } from "./friends/CardModal";
@@ -19,27 +15,11 @@ import {
 } from "./friends/organize";
 import { PersonCard } from "./friends/PersonCard";
 import { buildPeople, type Person } from "./friends/people";
-import { ViewLargeIcon, ViewListIcon, ViewSmallIcon } from "./prints/icons";
-
-type GridViewMode = "list" | "sm" | "lg";
-
-const GRID_MODES = [
-  { mode: "list", label: "リスト表示", icon: ViewListIcon },
-  { mode: "sm", label: "小カード表示", icon: ViewSmallIcon },
-  { mode: "lg", label: "大カード表示", icon: ViewLargeIcon },
-] as const;
 
 const PRESENCE_TABS: { value: PresenceFilter; label: string }[] = [
   { value: "joinable", label: "参加可能" },
   { value: "online", label: "オンライン" },
   { value: "all", label: "全員" },
-];
-
-const STATUS_CHIPS: { status: string; label: string; dot: string }[] = [
-  { status: "join me", label: "join me", dot: "joinme" },
-  { status: "active", label: "active", dot: "active" },
-  { status: "ask me", label: "ask me", dot: "askme" },
-  { status: "busy", label: "busy", dot: "busy" },
 ];
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -58,13 +38,11 @@ export function FriendsView() {
   const [openUserId, setOpenUserId] = useState<string | null>(null);
 
   // View controls.
-  const [gridMode, setGridMode] = useState<GridViewMode>("sm");
+  const [gridMode, setGridMode] = useState<ViewMode>("card");
   const [groupByWorldOn, setGroupByWorldOn] = useState(false);
   // Filter controls.
   const [search, setSearch] = useState("");
   const [presence, setPresence] = useState<PresenceFilter>("online");
-  const [statuses, setStatuses] = useState<Set<string>>(new Set());
-  const [minTrust, setMinTrust] = useState(0);
   const [sort, setSort] = useState<SortMode>("default");
 
   const load = () => {
@@ -100,23 +78,14 @@ export function FriendsView() {
   const counts = useMemo(() => countByPresence(people), [people]);
 
   const visible = useMemo(
-    () => sortPeople(filterPeople(people, { search, presence, statuses, minTrust }), sort),
-    [people, search, presence, statuses, minTrust, sort],
+    () => sortPeople(filterPeople(people, { search, presence }), sort),
+    [people, search, presence, sort],
   );
 
   const groups = useMemo(
     () => (groupByWorldOn ? groupByWorld(visible, nameOf) : null),
     [groupByWorldOn, visible, nameOf],
   );
-
-  const toggleStatus = (s: string) => {
-    setStatuses((prev) => {
-      const next = new Set(prev);
-      if (next.has(s)) next.delete(s);
-      else next.add(s);
-      return next;
-    });
-  };
 
   const worldNameFor = (p: Person): string | undefined => {
     const parsed = parseLocation(p.location);
@@ -134,19 +103,7 @@ export function FriendsView() {
         <div className="mhead">
           <h2>フレンド</h2>
           <LastUpdated at={lastUpdate} />
-          <div className="view-toggle">
-            {GRID_MODES.map(({ mode, label, icon: Icon }) => (
-              <button
-                key={mode}
-                type="button"
-                className={gridMode === mode ? "vtog active" : "vtog"}
-                aria-label={label}
-                onClick={() => setGridMode(mode)}
-              >
-                <Icon />
-              </button>
-            ))}
-          </div>
+          <ViewToggle mode={gridMode} onChange={setGridMode} />
           <button
             type="button"
             className={groupByWorldOn ? "grpbtn active" : "grpbtn"}
@@ -203,38 +160,6 @@ export function FriendsView() {
                 {o.label}
               </option>
             ))}
-          </select>
-        </div>
-
-        <div className="ffilters second">
-          <div className="fchips">
-            {STATUS_CHIPS.map(({ status: s, label, dot }) => (
-              <button
-                key={s}
-                type="button"
-                className={statuses.has(s) ? "fchip active" : "fchip"}
-                aria-pressed={statuses.has(s)}
-                onClick={() => toggleStatus(s)}
-              >
-                <span className={`fdot ${dot}`} />
-                {label}
-              </button>
-            ))}
-          </div>
-          <select
-            className="ftrust"
-            aria-label="トラストランク"
-            value={minTrust}
-            onChange={(e) => setMinTrust(Number(e.target.value))}
-          >
-            <option value={0}>トラスト: すべて</option>
-            {TRUST_RANK_ORDER.map((rank, i) =>
-              i === 0 ? null : (
-                <option key={rank} value={i}>
-                  {TRUST_RANK_LABELS[rank]} 以上
-                </option>
-              ),
-            )}
           </select>
         </div>
 

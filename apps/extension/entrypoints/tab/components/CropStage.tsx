@@ -4,7 +4,7 @@
 // different aspect ratio without duplicating them.
 import { geom } from "@vrc-toolkit/core/domain";
 import { type PointerEvent as ReactPointerEvent, useLayoutEffect, useRef, useState } from "react";
-import { ZoomInIcon, ZoomOutIcon } from "./icons";
+import { Icon } from "./Icon";
 
 // The subset of a crop item this stage needs: source dimensions plus the
 // normalized center/zoom it reads and writes via onChange.
@@ -100,7 +100,7 @@ export function CropStage({ url, item, aspect, onChange }: Props) {
         <div className="frame" />
       </div>
       <div className="zoom">
-        <ZoomOutIcon />
+        <Icon name="minus" size={17} />
         <input
           type="range"
           min={1}
@@ -110,7 +110,7 @@ export function CropStage({ url, item, aspect, onChange }: Props) {
           aria-label="拡大"
           onChange={(e) => onChange({ zoom: Number.parseFloat(e.target.value) })}
         />
-        <ZoomInIcon />
+        <Icon name="plus" size={17} />
       </div>
     </>
   );

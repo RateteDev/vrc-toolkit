@@ -29,7 +29,6 @@ type ViewName = (typeof TABS)[number]["view"];
 
 export function Layout() {
   const [activeView, setActiveView] = useState<ViewName>("join");
-  const active = TABS.find((tab) => tab.view === activeView) ?? TABS[0];
 
   return (
     <main className="wrap">
@@ -44,6 +43,7 @@ export function Layout() {
             key={tab.view}
             type="button"
             className={tab.view === activeView ? "tab active" : "tab"}
+            title={tab.hint}
             onClick={() => setActiveView(tab.view)}
           >
             {tab.label}
@@ -70,11 +70,8 @@ export function Layout() {
         <StickersView />
       </section>
 
-      <footer className="rise d3">
-        <span id="footerHint">{active.hint}</span>
-        <span className="sep">·</span>
-        VRChat 非公式ツール（VRChat とは無関係です）
-      </footer>
+      {/* No footer for now: tab hints moved to the tab buttons' titles, and
+          the unofficial-tool disclaimer returns (with contact info) at release. */}
     </main>
   );
 }

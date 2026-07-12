@@ -5,7 +5,7 @@
 // stays with each caller.
 
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { UploadIcon } from "./icons";
+import { Icon } from "./Icon";
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 
@@ -106,7 +106,7 @@ export function ImageDropZone({ multiple, subLabel, onFiles, inputRef }: Props) 
         }}
       >
         <div className="ico" aria-hidden="true">
-          <UploadIcon />
+          <Icon name="upload" size={20} />
         </div>
         <div className="big">ドラッグ / クリック / ペーストで画像を追加</div>
         <div className="sub">{subLabel}</div>

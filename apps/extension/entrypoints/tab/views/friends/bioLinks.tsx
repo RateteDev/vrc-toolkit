@@ -3,8 +3,11 @@
 // permissions; only the domain is sent, never the full URL). When Google has
 // no real icon it serves a 16px generic globe; that (and any load error) falls
 // back to the bundled Tabler world glyph (tinted via CSS mask, see
-// .biolink-noicon). The destination URL — and the @handle when the URL is a
-// recognizable profile — is shown on hover.
+// .biolink-noicon). Hover / keyboard focus raises a custom popover with the
+// @handle (or service name) and the full destination URL; native title is
+// intentionally absent on links so the two tooltips never stack. Touch has no
+// hover: URL preview stays with the browser's native long-press menu, which a
+// long-press tooltip would otherwise hijack.
 
 import { useState } from "react";
 import { resolveLinkMeta } from "./linkMeta";
@@ -14,8 +17,6 @@ function LinkTile({ url }: { url: string }) {
   const [broken, setBroken] = useState(false);
   const label = meta.serviceName ?? meta.host;
   const ariaLabel = meta.handle ? `${label} ${meta.handle}` : label;
-  // Hover tooltip: handle when known, plus the full destination URL.
-  const title = meta.handle ? `${meta.handle} · ${url}` : url;
 
   const icon =
     meta.faviconUrl && !broken ? (
@@ -38,17 +39,21 @@ function LinkTile({ url }: { url: string }) {
     );
 
   // A bio link is user-controlled: only follow http(s), matching the markdown
-  // renderer. Other schemes (javascript:, data:) render as a non-clickable tile.
+  // renderer. Other schemes (javascript:, data:) render as a non-clickable
+  // tile, which keeps the native title since it has no popover.
   return meta.faviconUrl ? (
     <a
       className="biolink"
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      title={title}
       aria-label={ariaLabel}
     >
       {icon}
+      <span className="biolink-tip" aria-hidden="true">
+        <span className="biolink-tip-main">{meta.handle ?? label}</span>
+        <span className="biolink-tip-url">{url}</span>
+      </span>
     </a>
   ) : (
     <span className="biolink" title={url}>

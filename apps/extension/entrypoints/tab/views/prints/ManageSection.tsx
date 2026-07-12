@@ -1,5 +1,6 @@
 import { type PrintSummary, sortPrints, toPrintSummary } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Icon } from "../../components/Icon";
 import { LastUpdated } from "../../components/LastUpdated";
 import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
@@ -136,10 +137,17 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
   return (
     <section className="card">
       <div className="mhead">
-        <LastUpdated at={lastUpdate} />
         <ViewToggle mode={viewMode} onChange={setViewMode} />
-        <button type="button" className="refresh" onClick={load} disabled={busy}>
-          更新
+        <LastUpdated at={lastUpdate} />
+        <button
+          type="button"
+          className="refresh"
+          aria-label="更新"
+          title="更新"
+          onClick={load}
+          disabled={busy}
+        >
+          <Icon name="refresh" size={15} />
         </button>
       </div>
       <div className="ptoolbar">

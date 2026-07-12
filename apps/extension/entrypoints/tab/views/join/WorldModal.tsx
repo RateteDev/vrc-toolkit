@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckIcon, CopyIcon, XIcon } from "../../components/icons";
+import { Icon } from "../../components/Icon";
 import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
@@ -134,11 +134,11 @@ export function WorldModal({
           aria-label="ワールドIDをコピー"
         >
           {copyState === "copied" ? (
-            <CheckIcon />
+            <Icon name="check" size={15} />
           ) : copyState === "failed" ? (
-            <XIcon />
+            <Icon name="x" size={15} />
           ) : (
-            <CopyIcon />
+            <Icon name="copy" size={15} />
           )}
         </button>
       </div>

@@ -1,6 +1,7 @@
 import { VrcError } from "@vrc-toolkit/core";
 import { type AvatarSummary, fmtAvatar, fmtDate } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
+import { Icon } from "../../components/Icon";
 import { LastUpdated } from "../../components/LastUpdated";
 import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
@@ -14,11 +15,9 @@ function describeError(err: unknown): string {
   return `ネットワークエラー: ${err instanceof Error ? err.message : String(err)}`;
 }
 
-// releaseStatus badge modifier class; unrecognized values render the plain badge.
-function relClass(status: string): string {
-  if (status === "public" || status === "private" || status === "hidden") return status;
-  return "";
-}
+// Known statuses render as an icon badge; unknown values fall back to the
+// plain text badge so new VRChat statuses stay visible.
+const REL_ICONS: Record<string, string> = { public: "world", private: "lock", hidden: "eye-off" };
 
 // Platform values as reported by unityPackages[].platform; unrecognized values
 // render verbatim rather than being hidden, since VRChat may add new targets.
@@ -95,10 +94,10 @@ export function AvatarsGrid() {
     <section id="view-avatars">
       <section className="card">
         <div className="mhead">
-          <LastUpdated at={lastUpdate} />
           <ViewToggle mode={viewMode} onChange={setViewMode} />
-          <button type="button" className="refresh" onClick={load}>
-            更新
+          <LastUpdated at={lastUpdate} />
+          <button type="button" className="refresh" aria-label="更新" title="更新" onClick={load}>
+            <Icon name="refresh" size={15} />
           </button>
         </div>
         {message && <p className="mstatus">{message}</p>}
@@ -115,11 +114,19 @@ export function AvatarsGrid() {
                       : undefined
                   }
                 >
-                  {avatar.releaseStatus && (
-                    <span className={`arel ${relClass(avatar.releaseStatus)}`}>
-                      {avatar.releaseStatus}
-                    </span>
-                  )}
+                  {avatar.releaseStatus &&
+                    (REL_ICONS[avatar.releaseStatus] ? (
+                      <span
+                        className={`arel arel--icon ${avatar.releaseStatus}`}
+                        role="img"
+                        aria-label={avatar.releaseStatus}
+                        title={avatar.releaseStatus}
+                      >
+                        <Icon name={REL_ICONS[avatar.releaseStatus]} size={13} />
+                      </span>
+                    ) : (
+                      <span className="arel">{avatar.releaseStatus}</span>
+                    ))}
                 </div>
                 <div className="abody">
                   <div className="aname">{avatar.name || "（名前なし）"}</div>

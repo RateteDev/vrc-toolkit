@@ -451,21 +451,25 @@ textarea { resize: vertical; min-height: 62px; }
 /* wider upload modal sheet */
 .upload-sheet { max-width: 720px; }
 
-/* ── world detail modal (JOIN先) ── */
-.world-sheet { max-width: 560px; }
-.world-head { display: flex; align-items: flex-start; gap: 16px; }
-.world-thumb { width: 160px; height: 120px; flex: none; border-radius: var(--radius-sm); background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
-.world-headtext { min-width: 0; padding-top: 3px; }
-.world-name { margin: 0; font-size: 19px; }
-.world-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+/* ── world detail modal (JOIN先): full-width hero image, title with a small
+   copy icon, world ID demoted to a faint line, meta row, description, then
+   the shared instance rows and a small text link to the official site. ── */
+.world-sheet { max-width: 560px; padding-top: 0; overflow: hidden; }
+.world-hero { width: calc(100% + 40px); margin: 0 -20px 16px; aspect-ratio: 16 / 9; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
+/* The hero image sits under the modal's absolute-positioned close button;
+   give it a backdrop so it stays legible against arbitrary image content. */
+.world-sheet .close { background: rgba(255,253,248,.85); }
+.world-sheet .close:hover { background: var(--accent-tint); }
+.world-titlerow { display: flex; align-items: center; gap: 6px; }
+.world-name { margin: 0; font-size: 19px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-copy { display: grid; place-items: center; width: 26px; height: 26px; flex: none; color: var(--muted); background: none; border: none; border-radius: 6px; cursor: pointer; }
+.world-copy:hover { color: var(--accent-strong); background: var(--accent-tint); }
+.world-copy svg { width: 15px; height: 15px; }
+.world-id { margin: 2px 0 0; font-size: 11.5px; color: var(--faint); font-family: ui-monospace, Menlo, monospace; }
+.world-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
 .world-desc { font-size: 13.5px; white-space: pre-wrap; word-break: break-word; margin: 14px 0; }
-.world-actions { display: flex; gap: 8px; margin: 4px 0 6px; }
 .world-instances-title { font-family: var(--serif); font-weight: 500; font-size: 15px; margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--border); }
-.world-instances { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.world-instance { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
-.world-instance-body { min-width: 0; }
-.world-instance-count { font-size: 12px; font-weight: 700; color: var(--accent-strong); margin-right: 8px; font-variant-numeric: tabular-nums; }
-.world-instance-names { font-size: 13px; color: var(--ink); }
-.world-instance-invite { display: flex; align-items: center; gap: 8px; flex: none; }
+.world-officiallink { display: inline-block; margin-top: 16px; font-size: 12.5px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.world-officiallink:hover { color: var(--accent-strong); }
 .world-invite-ok { font-size: 12px; color: var(--ok); }
 .world-invite-err { font-size: 12px; color: var(--err); }

@@ -53,6 +53,11 @@ export interface VRChatWorld {
   capacity?: number;
   imageUrl?: string | null;
   thumbnailImageUrl?: string | null;
+  occupants?: number;
+  favorites?: number;
+  // Only present on GET /worlds/favorites entries.
+  favoriteGroup?: string;
+  favoriteId?: string;
 }
 
 // Minimal shape of a VRChat File object (POST /file/image response, GET

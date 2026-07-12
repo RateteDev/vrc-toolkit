@@ -16,3 +16,33 @@ describe("WorldsResource.get", () => {
     expect(await new WorldsResource(transport).get("wrld_x")).toBeNull();
   });
 });
+
+describe("WorldsResource.favorites", () => {
+  test("GET /worlds/favorites?n={n}", async () => {
+    const { transport, calls } = recorder(replyJson([{ id: "wrld_1", name: "月の海" }]));
+    const worlds = await new WorldsResource(transport).favorites(50);
+    expect(calls[0]?.path).toBe("/worlds/favorites?n=50");
+    expect(calls[0]?.init?.method ?? "GET").toBe("GET");
+    expect(worlds).toEqual([{ id: "wrld_1", name: "月の海" }]);
+  });
+
+  test("normalizes a non-array body to []", async () => {
+    const { transport } = recorder(replyJson(null));
+    expect(await new WorldsResource(transport).favorites(100)).toEqual([]);
+  });
+});
+
+describe("WorldsResource.recent", () => {
+  test("GET /worlds/recent?n={n}", async () => {
+    const { transport, calls } = recorder(replyJson([{ id: "wrld_2", name: "砂漠の遺跡" }]));
+    const worlds = await new WorldsResource(transport).recent(50);
+    expect(calls[0]?.path).toBe("/worlds/recent?n=50");
+    expect(calls[0]?.init?.method ?? "GET").toBe("GET");
+    expect(worlds).toEqual([{ id: "wrld_2", name: "砂漠の遺跡" }]);
+  });
+
+  test("normalizes a non-array body to []", async () => {
+    const { transport } = recorder(replyJson(null));
+    expect(await new WorldsResource(transport).recent(100)).toEqual([]);
+  });
+});

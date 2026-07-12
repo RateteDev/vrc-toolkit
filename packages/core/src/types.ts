@@ -71,6 +71,28 @@ export interface VRChatFavoriteGroup {
   visibility?: string;
 }
 
+// Wire shape of GET /instances/{location}. Only the fields the JOIN先 instance
+// row consumes are typed; all optional since the endpoint is undocumented.
+export interface VRChatInstance {
+  id?: string;
+  location?: string;
+  worldId?: string;
+  // Access type token (e.g. "public"/"hidden"/"friends"/"private"/"group"),
+  // redundant with parseInstanceAccess(location) but kept for completeness.
+  type?: string;
+  region?: string;
+  n_users?: number;
+  capacity?: number;
+  // False when the instance is at capacity for the account owner specifically
+  // (may differ from `full` due to queueing/group rules).
+  hasCapacityForYou?: boolean;
+  ageGate?: boolean;
+  full?: boolean;
+  canRequestInvite?: boolean;
+  groupAccessType?: string;
+  queueEnabled?: boolean;
+}
+
 // Minimal shape of a VRChat File object (POST /file/image response, GET
 // /file/{fileId}), only the fields needed to resolve the latest version's URL.
 export interface VRChatFile {

@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CheckIcon, CopyIcon, XIcon } from "../../components/icons";
 import { Modal } from "../../components/Modal";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 import type { Person } from "../friends/people";
+import { InstanceRowCard } from "./InstanceRowCard";
 import { groupMembersByInstance } from "./instances";
 
 type Phase = "idle" | "loading" | "loaded" | "error";
-type InviteStatus = "idle" | "busy" | "success" | "error";
+type CopyState = "idle" | "copied" | "failed";
 
 interface WorldDetail {
   name: string;
   description: string;
   authorName: string;
   capacity: number | null;
+  favorites: number | null;
 }
 
 // Ported from the Worker UI's world detail lookup, narrowed to the fields this
@@ -23,12 +26,14 @@ function toWorldDetail(w: {
   description?: string;
   authorName?: string;
   capacity?: number;
+  favorites?: number;
 }): WorldDetail {
   return {
     name: w.name ?? "",
     description: w.description ?? "",
     authorName: w.authorName ?? "",
     capacity: typeof w.capacity === "number" ? w.capacity : null,
+    favorites: typeof w.favorites === "number" ? w.favorites : null,
   };
 }
 
@@ -51,14 +56,14 @@ export function WorldModal({
   const [phase, setPhase] = useState<Phase>("idle");
   const [detail, setDetail] = useState<WorldDetail | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const [inviteState, setInviteState] = useState<
-    Record<string, { status: InviteStatus; message: string }>
-  >({});
+  const [copyState, setCopyState] = useState<CopyState>("idle");
 
   // Guards a stale GET /worlds/{id} response from landing after the modal
   // switched to a different world (same rationale as CardModal's loadSeqRef).
   const loadSeqRef = useRef(0);
+  // Resets the copy icon back to idle a moment after a copy/failure, so the
+  // feedback reads as transient rather than a permanent state change.
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (worldId === null) return;
@@ -67,7 +72,6 @@ export function WorldModal({
     setErrorMessage("");
     setDetail(null);
     setCopyState("idle");
-    setInviteState({});
     client.worlds
       .get(worldId)
       .then((w) => {
@@ -87,6 +91,12 @@ export function WorldModal({
       });
   }, [client, worldId]);
 
+  useEffect(() => {
+    return () => {
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+    };
+  }, []);
+
   const copyWorldId = useCallback(() => {
     if (worldId === null) return;
     // Clipboard access can be denied in the extension context; surface that on
@@ -97,29 +107,11 @@ export function WorldModal({
     );
   }, [worldId]);
 
-  const sendInvite = useCallback(
-    (location: string) => {
-      setInviteState((s) => ({ ...s, [location]: { status: "busy", message: "" } }));
-      client.invite
-        .myselfTo(location)
-        .then(() => {
-          setInviteState((s) => ({
-            ...s,
-            [location]: { status: "success", message: "招待を送りました（ゲーム内で受信）" },
-          }));
-        })
-        .catch((e: unknown) => {
-          setInviteState((s) => ({
-            ...s,
-            [location]: {
-              status: "error",
-              message: `送信に失敗しました: ${e instanceof Error ? e.message : String(e)}`,
-            },
-          }));
-        });
-    },
-    [client],
-  );
+  useEffect(() => {
+    if (copyState === "idle") return;
+    if (copyResetRef.current) clearTimeout(copyResetRef.current);
+    copyResetRef.current = setTimeout(() => setCopyState("idle"), 1800);
+  }, [copyState]);
 
   if (worldId === null) return null;
 
@@ -128,81 +120,62 @@ export function WorldModal({
 
   return (
     <Modal ariaLabel="ワールド詳細" sheetClass="world-sheet" onRequestClose={onClose}>
-      <div className="world-head">
-        <div
-          className="world-thumb"
-          style={thumbnailUrl ? { backgroundImage: cssUrl(thumbnailUrl) } : undefined}
-        />
-        <div className="world-headtext">
-          <h2 className="world-name">{displayName}</h2>
-          {detail ? (
-            <div className="world-meta">
-              {detail.authorName ? <span>作者: {detail.authorName}</span> : null}
-              {detail.capacity !== null ? <span>定員: {detail.capacity}</span> : null}
-            </div>
-          ) : null}
-        </div>
+      <div
+        className="world-hero"
+        style={thumbnailUrl ? { backgroundImage: cssUrl(thumbnailUrl) } : undefined}
+      />
+
+      <div className="world-titlerow">
+        <h2 className="world-name">{displayName}</h2>
+        <button
+          type="button"
+          className="world-copy"
+          onClick={copyWorldId}
+          aria-label="ワールドIDをコピー"
+        >
+          {copyState === "copied" ? (
+            <CheckIcon />
+          ) : copyState === "failed" ? (
+            <XIcon />
+          ) : (
+            <CopyIcon />
+          )}
+        </button>
       </div>
+      <p className="world-id">{worldId}</p>
+
+      {detail ? (
+        <div className="world-meta">
+          {detail.authorName ? <span>作者: {detail.authorName}</span> : null}
+          {detail.capacity !== null ? <span>定員: {detail.capacity}</span> : null}
+          {detail.favorites !== null ? <span>★{detail.favorites}</span> : null}
+        </div>
+      ) : null}
 
       {phase === "error" ? <p className="mstatus">{errorMessage}</p> : null}
       {detail?.description ? <p className="world-desc">{detail.description}</p> : null}
 
-      <div className="world-actions">
-        <a
-          className="aactbtn"
-          href={`https://vrchat.com/home/world/${encodeURIComponent(worldId)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          公式サイトで開く
-        </a>
-        <button type="button" className="aactbtn" onClick={copyWorldId}>
-          {copyState === "copied"
-            ? "コピーしました"
-            : copyState === "failed"
-              ? "コピーできませんでした"
-              : "ワールドIDをコピー"}
-        </button>
-      </div>
-
       {instanceRows.length > 0 ? (
         <>
           <h3 className="world-instances-title">インスタンス</h3>
-          <ul className="world-instances">
-            {instanceRows.map((row) => {
-              const state = inviteState[row.location] ?? { status: "idle" as const, message: "" };
-              const names = row.members.map((m) => m.displayName || "（名前なし）").join("、");
-              return (
-                <li key={row.location} className="world-instance">
-                  <div className="world-instance-body">
-                    <span className="world-instance-count">{row.members.length}人</span>
-                    <span className="world-instance-names">{names}</span>
-                  </div>
-                  <div className="world-instance-invite">
-                    <button
-                      type="button"
-                      className="aactbtn"
-                      disabled={state.status === "busy"}
-                      onClick={() => sendInvite(row.location)}
-                    >
-                      自分に招待を送る
-                    </button>
-                    {state.message ? (
-                      <span
-                        className={
-                          state.status === "error" ? "world-invite-err" : "world-invite-ok"
-                        }
-                      >
-                        {state.message}
-                      </span>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
+          <ul className="instrows">
+            {instanceRows.map((row) => (
+              // No onOpenMember here: the modal has no CardModal of its own,
+              // so InstanceRowCard renders its chips as non-interactive.
+              <InstanceRowCard key={row.location} row={row} />
+            ))}
           </ul>
         </>
       ) : null}
+
+      <a
+        className="world-officiallink"
+        href={`https://vrchat.com/home/world/${encodeURIComponent(worldId)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        公式サイトで開く ↗
+      </a>
     </Modal>
   );
 }

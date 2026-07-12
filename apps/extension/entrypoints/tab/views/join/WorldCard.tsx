@@ -1,11 +1,12 @@
-import { statusDotClass } from "../../status";
 import { cssUrl } from "../cssUrl";
 import type { Person } from "../friends/people";
+import { InstanceRowCard } from "./InstanceRowCard";
+import { groupMembersByInstance } from "./instances";
 
-// One world's joinable-friends group: a thumbnail on the left, name + member
-// pills on the right. Each pill opens the shared CardModal for that user; the
-// thumbnail and name open the WorldModal instead (two separate triggers so
-// neither button ends up nested inside the other).
+// One world's joinable-friends group: a thumbnail + name header (opens the
+// WorldModal for world detail) above a per-instance row list. Each row carries
+// its own access badge, region, occupancy, friend chips, and self-invite JOIN
+// button, so the user can decide and join without opening the modal.
 export function WorldCard({
   worldId,
   worldName,
@@ -22,6 +23,7 @@ export function WorldCard({
   onOpenMember: (userId: string) => void;
   onOpenWorld: (worldId: string) => void;
 }) {
+  const rows = groupMembersByInstance(members);
   return (
     <div className="jworld">
       <button
@@ -36,24 +38,11 @@ export function WorldCard({
           <span className="jname">{worldName ?? "読み込み中…"}</span>
           <span className="jcount">{members.length}</span>
         </button>
-        <div className="jmembers">
-          {members.map((p) => (
-            <button
-              key={p.userId}
-              type="button"
-              className="jchip"
-              onClick={() => onOpenMember(p.userId)}
-            >
-              <span
-                className="jchip-avatar"
-                style={p.imageUrl ? { backgroundImage: cssUrl(p.imageUrl) } : undefined}
-              >
-                <span className={`fdot jchip-dot ${statusDotClass(p.status)}`} />
-              </span>
-              <span>{p.displayName || "（名前なし）"}</span>
-            </button>
+        <ul className="instrows">
+          {rows.map((row) => (
+            <InstanceRowCard key={row.location} row={row} onOpenMember={onOpenMember} />
           ))}
-        </div>
+        </ul>
       </div>
     </div>
   );

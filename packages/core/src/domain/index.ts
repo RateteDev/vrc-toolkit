@@ -7,6 +7,7 @@ export * from "./crop";
 export * from "./dates";
 export * from "./friends";
 export * from "./images";
+export * from "./instances";
 export * from "./notes";
 export * from "./preprocess";
 export * from "./presence";

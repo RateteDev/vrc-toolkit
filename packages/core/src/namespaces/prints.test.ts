@@ -68,3 +68,58 @@ describe("PrintsResource.delete", () => {
     expect(calls[0]?.init?.method).toBe("DELETE");
   });
 });
+
+describe("PrintsResource.listAll", () => {
+  test("pages with n=100 until a short page", async () => {
+    const fullPage = Array.from({ length: 100 }, (_, i) => ({ id: `p${i}` }));
+    const { transport, calls } = recorder(({ path }) => {
+      const offset = new URL(`https://x${path}`).searchParams.get("offset");
+      const body = offset === "0" ? fullPage : [{ id: "last" }];
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+    const all = await new PrintsResource(transport).listAll("usr_1");
+    expect(all).toHaveLength(101);
+    expect(calls.map((c) => c.path)).toEqual([
+      "/prints/user/usr_1?n=100&offset=0",
+      "/prints/user/usr_1?n=100&offset=100",
+    ]);
+  });
+
+  test("an endpoint that ignores offset terminates after one repeated page", async () => {
+    const fullPage = Array.from({ length: 100 }, (_, i) => ({ id: `p${i}` }));
+    const { transport, calls } = recorder(replyJson(fullPage));
+    const all = await new PrintsResource(transport).listAll("usr_1");
+    expect(all).toHaveLength(100);
+    expect(calls).toHaveLength(2);
+  });
+
+  test("a full page without ids is taken once, then paging stops", async () => {
+    const anonymousPage = Array.from({ length: 100 }, () => ({ note: "x" }));
+    const { transport, calls } = recorder(replyJson(anonymousPage));
+    const all = await new PrintsResource(transport).listAll("usr_1");
+    expect(all).toHaveLength(100);
+    expect(calls).toHaveLength(1);
+  });
+
+  test("a partially repeated page contributes only its unseen items", async () => {
+    // Page 2 re-serves p99 (list shifted upstream) plus one new item, then a
+    // short third page ends paging. The repeat must be dropped, not doubled.
+    const page1 = Array.from({ length: 100 }, (_, i) => ({ id: `p${i}` }));
+    const page2 = [{ id: "p99" }, ...Array.from({ length: 99 }, (_, i) => ({ id: `q${i}` }))];
+    const { transport, calls } = recorder(({ path }) => {
+      const offset = new URL(`https://x${path}`).searchParams.get("offset");
+      const body = offset === "0" ? page1 : offset === "100" ? page2 : [];
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+    const all = await new PrintsResource(transport).listAll("usr_1");
+    expect(all).toHaveLength(199);
+    expect(all.filter((p) => p.id === "p99")).toHaveLength(1);
+    expect(calls).toHaveLength(3);
+  });
+
+  test("an empty first page yields [] after one request", async () => {
+    const { transport, calls } = recorder(replyJson([]));
+    expect(await new PrintsResource(transport).listAll("usr_1")).toEqual([]);
+    expect(calls).toHaveLength(1);
+  });
+});

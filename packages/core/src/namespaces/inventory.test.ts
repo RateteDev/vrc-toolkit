@@ -21,3 +21,33 @@ describe("InventoryResource.list", () => {
     expect(await new InventoryResource(transport).list("sticker")).toBeNull();
   });
 });
+
+describe("InventoryResource.listAll", () => {
+  test("flattens data across pages until a short page", async () => {
+    const fullPage = Array.from({ length: 100 }, (_, i) => ({ id: `inv${i}` }));
+    const { transport, calls } = recorder(({ path }) => {
+      const offset = new URL(`https://x${path}`).searchParams.get("offset");
+      const body = offset === "0" ? { data: fullPage } : { data: [{ id: "inv_last" }] };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+    const all = await new InventoryResource(transport).listAll("sticker");
+    expect(all).toHaveLength(101);
+    expect(calls.map((c) => c.path)).toEqual([
+      "/inventory?types=sticker&n=100&offset=0",
+      "/inventory?types=sticker&n=100&offset=100",
+    ]);
+  });
+
+  test("an endpoint that ignores offset terminates after one repeated page", async () => {
+    const fullPage = Array.from({ length: 100 }, (_, i) => ({ id: `inv${i}` }));
+    const { transport, calls } = recorder(replyJson({ data: fullPage }));
+    const all = await new InventoryResource(transport).listAll("sticker");
+    expect(all).toHaveLength(100);
+    expect(calls).toHaveLength(2);
+  });
+
+  test("a null envelope yields []", async () => {
+    const { transport } = recorder(() => new Response("not json", { status: 200 }));
+    expect(await new InventoryResource(transport).listAll("sticker")).toEqual([]);
+  });
+});

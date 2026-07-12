@@ -48,11 +48,9 @@ export function StickerInventoryCard({
     (async () => {
       try {
         const query = inventoryQuery(invType);
-        // n=100/offset=0 mirrors the old server-side listInventory page size
-        // (spec No.25); the API's own item cap per type is unconfirmed.
-        const res = await vrc.inventory.list(query, { n: 100, offset: 0 });
+        const raw = await vrc.inventory.listAll(query);
         if (cancelled) return;
-        const mapped = (res?.data ?? []).map(fmtInventoryItem);
+        const mapped = raw.map(fmtInventoryItem);
         setItems(mapped);
         setLastUpdate(new Date());
         setStatusMessage(mapped.length ? null : "所有しているアイテムがありません。");

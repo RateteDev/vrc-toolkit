@@ -6,7 +6,7 @@ import {
   fmtRelative,
   TRUST_RANK_LABELS,
 } from "@vrc-toolkit/core/domain";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "../../components/Modal";
 import { statusDotClass } from "../../status";
 import { trustClass } from "../../trust";
@@ -43,18 +43,30 @@ export function CardModal({
   const [noteStatus, setNoteStatus] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Guards against a stale response landing after the modal switched to
+  // another user (or was refreshed): without it, user A's slow response could
+  // overwrite user B's card — and a note saved from that state would write
+  // A's note text onto B. Each load bumps the sequence; only the latest
+  // load's callbacks may touch state.
+  const loadSeqRef = useRef(0);
+
   // Shared by the open effect and the refresh button; resets everything so a
   // refresh behaves exactly like reopening the card.
   const load = useCallback(() => {
     if (userId === null) return;
+    const seq = ++loadSeqRef.current;
     setPhase("loading");
     setErrorMessage("");
     setCard(null);
     setNoteDraft("");
     setNoteStatus("");
+    // An in-flight save's callbacks are sequence-guarded and will not restore
+    // this, so reset it here or the save button stays stuck disabled.
+    setSaving(false);
     client.users
       .get(userId)
       .then((user) => {
+        if (seq !== loadSeqRef.current) return;
         if (!user) {
           setPhase("error");
           setErrorMessage("読み込みに失敗しました");
@@ -70,6 +82,7 @@ export function CardModal({
         setPhase("loaded");
       })
       .catch((e: unknown) => {
+        if (seq !== loadSeqRef.current) return;
         setPhase("error");
         setErrorMessage(`ネットワークエラー: ${e instanceof Error ? e.message : String(e)}`);
       });
@@ -82,19 +95,25 @@ export function CardModal({
   const saveNote = () => {
     if (userId === null) return;
     const saved = noteDraft;
+    // The upsert itself targets the captured userId either way; the guard only
+    // keeps its UI feedback from landing on a different user's card after a
+    // mid-save switch (any switch runs load(), which bumps the sequence).
+    const seq = loadSeqRef.current;
     setSaving(true);
     setNoteStatus("保存中…");
     client.notes
       .upsert({ targetUserId: userId, note: saved })
       .then(() => {
+        onNoteSaved(userId, saved);
+        if (seq !== loadSeqRef.current) return;
         // Advance the dirty-check baseline to what was persisted so closing no
         // longer prompts to discard. A later edit re-dirties against this value.
         setCard((c) => (c ? { ...c, note: saved } : c));
         setNoteStatus("保存しました。");
         setSaving(false);
-        onNoteSaved(userId, saved);
       })
       .catch((e: unknown) => {
+        if (seq !== loadSeqRef.current) return;
         setNoteStatus(`ネットワークエラー: ${e instanceof Error ? e.message : String(e)}`);
         setSaving(false);
       });

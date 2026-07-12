@@ -2,7 +2,7 @@
 
 import { VrcResource } from "../resource";
 import type { PrintUploadResponse, VRChatPrint } from "../types";
-import { buildQuery } from "./_shared";
+import { buildQuery, PAGE_SIZE, paginateAllGuarded } from "./_shared";
 
 export interface PrintUploadInput {
   image: Blob;
@@ -21,14 +21,21 @@ export interface PrintsListParams {
 export class PrintsResource extends VrcResource {
   // GET /prints/user/{userId} — a user's prints (raw). n/offset are omitted
   // when unspecified so the API's own defaults apply. Single request.
-  //
-  // No listAll: whether /prints/user/{userId} honors `offset` at all is
-  // unverified against the real API. Auto-paginating an endpoint that ignores
-  // offset would loop forever over identical pages, so pagination is left to
-  // the caller until that's confirmed.
   list(userId: string, params: PrintsListParams = {}): Promise<VRChatPrint[]> {
     const query = buildQuery({ n: params.n, offset: params.offset });
     return this.requestArray<VRChatPrint>(`/prints/user/${encodeURIComponent(userId)}${query}`);
+  }
+
+  // Page GET /prints/user/{userId} to exhaustion (n=100). Whether this
+  // endpoint honors `offset` is unverified against the real API, so the
+  // guarded paginator is used: if `offset` turns out to be ignored, paging
+  // stops after one repeated page instead of looping forever.
+  listAll(userId: string): Promise<VRChatPrint[]> {
+    return paginateAllGuarded(
+      PAGE_SIZE,
+      (offset) => this.list(userId, { n: PAGE_SIZE, offset }),
+      (p) => p.id,
+    );
   }
 
   // POST /prints (multipart/form-data). Uploads an arbitrary image as a Print,

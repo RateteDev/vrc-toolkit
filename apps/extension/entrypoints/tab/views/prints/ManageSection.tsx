@@ -49,7 +49,7 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
         setLoadError("ログインが必要です");
         return;
       }
-      const raw = await client.prints.list(user.id, { n: 100 });
+      const raw = await client.prints.listAll(user.id);
       setPrints(sortPrints(raw.map(toPrintSummary)));
       setLastUpdate(new Date());
     } catch (err) {

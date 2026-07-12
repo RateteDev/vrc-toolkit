@@ -455,12 +455,30 @@ textarea { resize: vertical; min-height: 62px; }
 
 /* ── bio links as uniform icon tiles (favicon; handle + URL on hover) ── */
 .biolinks { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
-.biolink { display: grid; place-items: center; width: 44px; height: 44px; text-decoration: none; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: box-shadow .15s, transform .12s, border-color .15s; }
-.biolink:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: var(--border-strong); }
-.biolink-icon { width: 22px; height: 22px; border-radius: 5px; }
+/* Borderless tinted tile: favicons often carry their own rounded frame, so a
+   tile border would read as a double frame. The sunken background marks the
+   clickable area instead. */
+.biolink { position: relative; display: grid; place-items: center; width: 44px; height: 44px; text-decoration: none; border-radius: var(--radius-sm); background: var(--surface-sunken); transition: box-shadow .15s, transform .12s, background .15s; }
+.biolink:hover { transform: translateY(-1px); box-shadow: var(--shadow); background: var(--accent-tint); }
+.biolink-icon { width: 26px; height: 26px; border-radius: 6px; }
 /* Fallback glyph: tint the unmodified Tabler world SVG via mask so it inherits
    the palette without an inline <svg> or a fixed color baked into the file. */
-.biolink-noicon { border-radius: 0; background-color: var(--muted); -webkit-mask: url("/assets/icons/world.svg") center / 22px 22px no-repeat; mask: url("/assets/icons/world.svg") center / 22px 22px no-repeat; }
+.biolink-noicon { border-radius: 0; background-color: var(--muted); -webkit-mask: url("/assets/icons/world.svg") center / 26px 26px no-repeat; mask: url("/assets/icons/world.svg") center / 26px 26px no-repeat; }
+
+/* Popover above the tile: handle/service on top, full URL below. Shown on
+   hover and keyboard focus; pointer-events stays off so it never traps the
+   cursor. */
+.biolink-tip { position: absolute; left: 50%; bottom: calc(100% + 9px); transform: translateX(-50%) translateY(3px); display: flex; flex-direction: column; gap: 2px; width: max-content; max-width: 300px; padding: 9px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .14s ease, transform .18s cubic-bezier(.2,.7,.2,1); z-index: 5; }
+/* Arrow: a rotated square sharing the popover border. */
+.biolink-tip::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 8px; transform: translateX(-50%) rotate(45deg); background: var(--surface); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.biolink:hover .biolink-tip, .biolink:focus-visible .biolink-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.biolink-tip-main { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Full URL, wrapping up to two lines; anything longer is clamped with an ellipsis. */
+.biolink-tip-url { font-size: 12px; color: var(--muted); line-height: 1.4; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Left-edge tile: keep the popover inside the sheet. */
+.biolink:first-child .biolink-tip { left: 0; transform: translateX(0) translateY(3px); }
+.biolink:first-child:hover .biolink-tip, .biolink:first-child:focus-visible .biolink-tip { transform: translateX(0) translateY(0); }
+.biolink:first-child .biolink-tip::after { left: 18px; transform: rotate(45deg); }
 
 /* wider upload modal sheet */
 .upload-sheet { max-width: 720px; }

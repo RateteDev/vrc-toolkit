@@ -114,7 +114,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       updatingRef.current = true;
       setAccount((a) => (a ? { ...a, ...next } : a));
       try {
-        await client.status.update(cur.id, next);
+        await client.users.update(cur.id, next);
       } catch (e) {
         setAccount((a) =>
           a ? { ...a, status: cur.status, statusDescription: cur.statusDescription } : a,

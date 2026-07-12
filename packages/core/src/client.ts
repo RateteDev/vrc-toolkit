@@ -10,7 +10,6 @@ import { FriendsResource } from "./namespaces/friends";
 import { InventoryResource } from "./namespaces/inventory";
 import { NotesResource } from "./namespaces/notes";
 import { PrintsResource } from "./namespaces/prints";
-import { StatusResource } from "./namespaces/status";
 import { UsersResource } from "./namespaces/users";
 import { WorldsResource } from "./namespaces/worlds";
 import type { VrcTransport } from "./transport/types";
@@ -21,7 +20,6 @@ export class VrcClient {
   readonly worlds: WorldsResource;
   readonly friends: FriendsResource;
   readonly notes: NotesResource;
-  readonly status: StatusResource;
   readonly prints: PrintsResource;
   readonly avatars: AvatarsResource;
   readonly inventory: InventoryResource;
@@ -33,7 +31,6 @@ export class VrcClient {
     this.worlds = new WorldsResource(transport);
     this.friends = new FriendsResource(transport);
     this.notes = new NotesResource(transport);
-    this.status = new StatusResource(transport);
     this.prints = new PrintsResource(transport);
     this.avatars = new AvatarsResource(transport);
     this.inventory = new InventoryResource(transport);

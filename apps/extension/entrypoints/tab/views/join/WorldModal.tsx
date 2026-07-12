@@ -51,7 +51,7 @@ export function WorldModal({
   const [phase, setPhase] = useState<Phase>("idle");
   const [detail, setDetail] = useState<WorldDetail | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [idCopied, setIdCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [inviteState, setInviteState] = useState<
     Record<string, { status: InviteStatus; message: string }>
   >({});
@@ -66,7 +66,7 @@ export function WorldModal({
     setPhase("loading");
     setErrorMessage("");
     setDetail(null);
-    setIdCopied(false);
+    setCopyState("idle");
     setInviteState({});
     client.worlds
       .get(worldId)
@@ -89,7 +89,12 @@ export function WorldModal({
 
   const copyWorldId = useCallback(() => {
     if (worldId === null) return;
-    void navigator.clipboard.writeText(worldId).then(() => setIdCopied(true));
+    // Clipboard access can be denied in the extension context; surface that on
+    // the button instead of leaving an unhandled rejection.
+    navigator.clipboard.writeText(worldId).then(
+      () => setCopyState("copied"),
+      () => setCopyState("failed"),
+    );
   }, [worldId]);
 
   const sendInvite = useCallback(
@@ -152,7 +157,11 @@ export function WorldModal({
           公式サイトで開く
         </a>
         <button type="button" className="aactbtn" onClick={copyWorldId}>
-          {idCopied ? "コピーしました" : "ワールドIDをコピー"}
+          {copyState === "copied"
+            ? "コピーしました"
+            : copyState === "failed"
+              ? "コピーできませんでした"
+              : "ワールドIDをコピー"}
         </button>
       </div>
 

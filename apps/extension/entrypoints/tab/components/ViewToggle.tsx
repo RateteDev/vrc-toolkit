@@ -1,55 +1,43 @@
-// Shared view-mode toggle (list / card), used by the friends, avatars, and
-// prints views. Icons live here since this is now their only consumer group.
+import { Icon } from "./Icon";
+
+// Shared view-mode toggle. Defaults to the common list/card pair; views with
+// a different density set (e.g. stickers' list/sm/lg) pass their own options.
 
 export type ViewMode = "list" | "card";
 
-function ViewListIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-      <path
-        d="M1 3h12M1 7h12M1 11h12"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
+export interface ViewModeOption<M extends string> {
+  mode: M;
+  label: string;
+  icon: string;
 }
 
-function ViewCardIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-      <rect x={1} y={1} width={5} height={5} rx={1} fill="currentColor" />
-      <rect x={8} y={1} width={5} height={5} rx={1} fill="currentColor" />
-      <rect x={1} y={8} width={5} height={5} rx={1} fill="currentColor" />
-      <rect x={8} y={8} width={5} height={5} rx={1} fill="currentColor" />
-    </svg>
-  );
-}
-
-const MODES: { mode: ViewMode; label: string; icon: typeof ViewListIcon }[] = [
-  { mode: "list", label: "リスト表示", icon: ViewListIcon },
-  { mode: "card", label: "カード表示", icon: ViewCardIcon },
+const DEFAULT_MODES: ViewModeOption<ViewMode>[] = [
+  { mode: "list", label: "リスト表示", icon: "list" },
+  { mode: "card", label: "カード表示", icon: "layout-grid" },
 ];
 
-interface Props {
-  mode: ViewMode;
-  onChange: (mode: ViewMode) => void;
+interface Props<M extends string> {
+  mode: M;
+  onChange: (mode: M) => void;
+  modes?: ViewModeOption<M>[];
 }
 
-export function ViewToggle({ mode, onChange }: Props) {
+export function ViewToggle<M extends string = ViewMode>({ mode, onChange, modes }: Props<M>) {
+  // The cast is sound in practice: callers omit `modes` only where M is the
+  // default ViewMode.
+  const options = (modes ?? DEFAULT_MODES) as ViewModeOption<M>[];
   return (
     <div className="view-toggle">
-      {MODES.map(({ mode: m, label, icon: Icon }) => (
+      {options.map((o) => (
         <button
-          key={m}
+          key={o.mode}
           type="button"
-          className={mode === m ? "vtog active" : "vtog"}
-          aria-label={label}
-          onClick={() => onChange(m)}
+          className={mode === o.mode ? "vtog active" : "vtog"}
+          aria-label={o.label}
+          title={o.label}
+          onClick={() => onChange(o.mode)}
         >
-          <Icon />
+          <Icon name={o.icon} size={14} />
         </button>
       ))}
     </div>

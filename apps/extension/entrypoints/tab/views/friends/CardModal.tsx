@@ -7,6 +7,7 @@ import {
   TRUST_RANK_LABELS,
 } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Icon } from "../../components/Icon";
 import { Modal } from "../../components/Modal";
 import { statusDotClass } from "../../status";
 import { trustClass } from "../../trust";
@@ -154,15 +155,7 @@ export function CardModal({
         aria-label="情報を更新"
         title="情報を更新"
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="refresh" size={15} />
       </button>
       <div className="card-head">
         <div

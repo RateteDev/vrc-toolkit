@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Icon } from "../components/Icon";
 import { LastUpdated } from "../components/LastUpdated";
 import { friendsStore, useFriends } from "../friendsStore";
 import { instanceStore } from "../instanceStore";
@@ -56,6 +57,8 @@ export function JoinView() {
           <button
             type="button"
             className="refresh"
+            aria-label="更新"
+            title="更新"
             onClick={() => {
               // Occupancy is volatile: a manual refresh should re-fetch
               // instance detail too, not keep serving this session's cache.
@@ -63,7 +66,7 @@ export function JoinView() {
               friendsStore.load(client);
             }}
           >
-            更新
+            <Icon name="refresh" size={15} />
           </button>
         </div>
         {displayStatus ? <p className="mstatus">{displayStatus}</p> : null}

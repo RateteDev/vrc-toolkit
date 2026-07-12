@@ -6,6 +6,7 @@ import {
   worldFavoriteGroups,
 } from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
+import { Icon } from "../components/Icon";
 import { LastUpdated } from "../components/LastUpdated";
 import { useVrc } from "../vrc";
 import { errorMessage } from "./errorMessage";
@@ -60,8 +61,8 @@ export function WorldsView() {
       <section className="card">
         <div className="mhead">
           <LastUpdated at={lastUpdate} />
-          <button type="button" className="refresh" onClick={load}>
-            更新
+          <button type="button" className="refresh" aria-label="更新" title="更新" onClick={load}>
+            <Icon name="refresh" size={15} />
           </button>
         </div>
         {message ? <p className="mstatus">{message}</p> : null}

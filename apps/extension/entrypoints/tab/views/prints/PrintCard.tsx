@@ -1,6 +1,6 @@
 import { fmtDate, type PrintSummary } from "@vrc-toolkit/core/domain";
+import { Icon } from "../../components/Icon";
 import { cssUrl } from "../cssUrl";
-import { TrashIcon } from "./icons";
 
 interface Props {
   print: PrintSummary;
@@ -64,7 +64,7 @@ export function PrintCard({ print, onDelete, deleting, selectable, selected, onT
           disabled={deleting}
           onClick={onDelete}
         >
-          <TrashIcon />
+          <Icon name="trash" size={15} />
         </button>
       ) : null}
     </div>

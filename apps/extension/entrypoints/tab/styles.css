@@ -99,9 +99,9 @@ body {
 .ritem .copy { font: inherit; font-size: 12px; font-weight: 600; flex: none; color: var(--ok); background: #fffdf8; border: 1px solid #cfe0c9; border-radius: 8px; padding: 5px 11px; cursor: pointer; }
 
 /* manage */
-.mhead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
-.refresh { font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-strong); background: none; border: none; cursor: pointer; }
-.refresh:hover { text-decoration: underline; }
+.mhead { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
+.refresh { display: grid; place-items: center; width: 28px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: none; color: var(--accent-strong); cursor: pointer; transition: color .12s, background .12s, border-color .12s; }
+.refresh:hover { border-color: var(--accent); background: var(--accent-tint); }
 .mstatus { color: var(--muted); font-size: 14px; margin: 14px 2px 2px; }
 .mstatus.err { color: var(--accent-strong); }
 .invtabs { display: flex; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--border); }
@@ -138,7 +138,6 @@ body {
 .pcard .del { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border: none; border-radius: 8px; background: rgba(20,15,10,.5); color: #fff; cursor: pointer; display: grid; place-items: center; opacity: .9; transition: background .15s, opacity .15s; }
 .pcard:hover .del { opacity: 1; }
 .pcard .del:hover { background: var(--err); }
-.pcard .del svg { width: 15px; height: 15px; }
 .pcard.removing { opacity: .35; pointer-events: none; }
 
 /* friends — unified view */
@@ -206,6 +205,7 @@ body {
 .arel.public { background: #4caf50; }
 .arel.private { background: #9e9e9e; }
 .arel.hidden { background: #ef5350; }
+.arel--icon { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border-radius: 50%; }
 /* Column flex + margin-top:auto on .aactions pins the button row to the card
    bottom, so rows of cards keep their actions aligned regardless of how many
    platform tags / description lines each card has. */
@@ -276,6 +276,9 @@ body {
 .vtog:hover { color: var(--ink); border-color: var(--accent); }
 .vtog.active { color: var(--accent-strong); background: var(--accent-tint); border-color: var(--accent); }
 
+/* Mask-tinted icon glyph (see components/Icon.tsx). */
+.micon { display: inline-block; flex: none; background-color: currentColor; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+
 /* ---- view modes: list ---- */
 .pgrid.view-list { grid-template-columns: 1fr; gap: 6px; }
 .pgrid.view-list .pcard { aspect-ratio: auto; display: flex; flex-direction: row; border-radius: 10px; }
@@ -339,7 +342,6 @@ body {
     linear-gradient(rgba(255,255,255,.28), rgba(255,255,255,.28)) 0 66.66% / 100% 1px no-repeat; }
 .zoom { display: flex; align-items: center; gap: 12px; margin: 14px 0 4px; color: var(--faint); }
 .zoom input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; }
-.zoom svg { width: 17px; height: 17px; }
 .field { margin-top: 15px; }
 label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 6px; }
 input[type=text], textarea { width: 100%; font: inherit; color: var(--ink); background: #fcfaf4; border: 1px solid var(--border-strong); border-radius: 10px; padding: 11px 13px; transition: border-color .15s, box-shadow .15s; }
@@ -495,7 +497,6 @@ textarea { resize: vertical; min-height: 62px; }
 .world-name { margin: 0; font-size: 19px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-copy { display: grid; place-items: center; width: 26px; height: 26px; flex: none; color: var(--muted); background: none; border: none; border-radius: 6px; cursor: pointer; }
 .world-copy:hover { color: var(--accent-strong); background: var(--accent-tint); }
-.world-copy svg { width: 15px; height: 15px; }
 .world-id { margin: 2px 0 0; font-size: 11.5px; color: var(--faint); font-family: ui-monospace, Menlo, monospace; }
 .world-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
 .world-desc { font-size: 13.5px; white-space: pre-wrap; word-break: break-word; margin: 14px 0; }

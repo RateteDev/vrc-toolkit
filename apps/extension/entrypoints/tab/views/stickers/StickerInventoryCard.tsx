@@ -7,7 +7,9 @@ import {
   inventoryQuery,
 } from "@vrc-toolkit/core/domain";
 import { useEffect, useState } from "react";
+import { Icon } from "../../components/Icon";
 import { LastUpdated } from "../../components/LastUpdated";
+import { type ViewModeOption, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 
@@ -17,6 +19,12 @@ const INV_TABS: { value: InventoryType; label: string }[] = [
 ];
 
 type ViewMode = "list" | "sm" | "lg";
+
+const VIEW_MODES: ViewModeOption<ViewMode>[] = [
+  { mode: "list", label: "リスト表示", icon: "list" },
+  { mode: "sm", label: "小カード表示", icon: "layout-grid" },
+  { mode: "lg", label: "大カード表示", icon: "layout-rows" },
+];
 
 export function StickerInventoryCard({
   invType,
@@ -72,55 +80,16 @@ export function StickerInventoryCard({
   return (
     <section className="card">
       <div className="mhead">
-        <div className="view-toggle">
-          <button
-            type="button"
-            className={viewMode === "list" ? "vtog active" : "vtog"}
-            aria-label="リスト表示"
-            onClick={() => setViewMode("list")}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-              <path
-                d="M1 3h12M1 7h12M1 11h12"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                fill="none"
-              />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={viewMode === "sm" ? "vtog active" : "vtog"}
-            aria-label="小カード表示"
-            onClick={() => setViewMode("sm")}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-              <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" />
-              <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" />
-              <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" />
-              <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={viewMode === "lg" ? "vtog active" : "vtog"}
-            aria-label="大カード表示"
-            onClick={() => setViewMode("lg")}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-              <rect x="1" y="1" width="12" height="5" rx="1" fill="currentColor" />
-              <rect x="1" y="8" width="12" height="5" rx="1" fill="currentColor" />
-            </svg>
-          </button>
-        </div>
+        <ViewToggle mode={viewMode} onChange={setViewMode} modes={VIEW_MODES} />
         <LastUpdated at={lastUpdate} />
         <button
           type="button"
           className="refresh"
+          aria-label="更新"
+          title="更新"
           onClick={() => setManualRefreshNonce((n) => n + 1)}
         >
-          更新
+          <Icon name="refresh" size={15} />
         </button>
       </div>
       <div className="ptoolbar">

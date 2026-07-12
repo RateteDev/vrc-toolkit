@@ -1,5 +1,6 @@
 import { parseLocation } from "@vrc-toolkit/core/domain";
 import { useEffect, useMemo, useState } from "react";
+import { Icon } from "../components/Icon";
 import { LastUpdated } from "../components/LastUpdated";
 import { type ViewMode, ViewToggle } from "../components/ViewToggle";
 import { friendsStore, useFriends } from "../friendsStore";
@@ -83,8 +84,14 @@ export function FriendsView() {
         <div className="mhead">
           <ViewToggle mode={gridMode} onChange={setGridMode} />
           <LastUpdated at={lastUpdate} />
-          <button type="button" className="refresh" onClick={() => friendsStore.load(client)}>
-            更新
+          <button
+            type="button"
+            className="refresh"
+            aria-label="更新"
+            title="更新"
+            onClick={() => friendsStore.load(client)}
+          >
+            <Icon name="refresh" size={15} />
           </button>
         </div>
         <div className="ffilters">

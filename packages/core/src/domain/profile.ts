@@ -9,6 +9,9 @@ export const MAX_BIO_LINKS = 3;
 
 // Reject a bio over the length limit; otherwise pass it through unmodified
 // (raw newlines are preserved, matching how the API round-trips bio).
+// Note: the server normalizes some ASCII punctuation on save (observed
+// 2026-07-13: `[` `]` come back as full-width `［` `］`), so a stored bio may
+// not byte-equal the submitted one. Harmless for editing; do not "fix" it here.
 export function validateBio(bio: string): string {
   if (bio.length > MAX_BIO_LENGTH) {
     throw new Error(`bio は ${MAX_BIO_LENGTH} 文字以内で入力してください`);

@@ -165,38 +165,44 @@ export function WorldModal({
         </button>
       </div>
 
-      <h3 className="world-instances-title">インスタンス</h3>
-      <ul className="world-instances">
-        {instanceRows.map((row) => {
-          const state = inviteState[row.location] ?? { status: "idle" as const, message: "" };
-          const names = row.members.map((m) => m.displayName || "（名前なし）").join("、");
-          return (
-            <li key={row.location} className="world-instance">
-              <div className="world-instance-body">
-                <span className="world-instance-count">{row.members.length}人</span>
-                <span className="world-instance-names">{names}</span>
-              </div>
-              <div className="world-instance-invite">
-                <button
-                  type="button"
-                  className="aactbtn"
-                  disabled={state.status === "busy"}
-                  onClick={() => sendInvite(row.location)}
-                >
-                  自分に招待を送る
-                </button>
-                {state.message ? (
-                  <span
-                    className={state.status === "error" ? "world-invite-err" : "world-invite-ok"}
-                  >
-                    {state.message}
-                  </span>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {instanceRows.length > 0 ? (
+        <>
+          <h3 className="world-instances-title">インスタンス</h3>
+          <ul className="world-instances">
+            {instanceRows.map((row) => {
+              const state = inviteState[row.location] ?? { status: "idle" as const, message: "" };
+              const names = row.members.map((m) => m.displayName || "（名前なし）").join("、");
+              return (
+                <li key={row.location} className="world-instance">
+                  <div className="world-instance-body">
+                    <span className="world-instance-count">{row.members.length}人</span>
+                    <span className="world-instance-names">{names}</span>
+                  </div>
+                  <div className="world-instance-invite">
+                    <button
+                      type="button"
+                      className="aactbtn"
+                      disabled={state.status === "busy"}
+                      onClick={() => sendInvite(row.location)}
+                    >
+                      自分に招待を送る
+                    </button>
+                    {state.message ? (
+                      <span
+                        className={
+                          state.status === "error" ? "world-invite-err" : "world-invite-ok"
+                        }
+                      >
+                        {state.message}
+                      </span>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : null}
     </Modal>
   );
 }

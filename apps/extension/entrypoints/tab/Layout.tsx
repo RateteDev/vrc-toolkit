@@ -5,15 +5,17 @@ import { FriendsView } from "./views/FriendsView";
 import { JoinView } from "./views/JoinView";
 import { PrintsView } from "./views/PrintsView";
 import { StickersView } from "./views/StickersView";
+import { WorldsView } from "./views/WorldsView";
 
 // Flat tab bar in resource order. JOIN先 leads and is the default view: it is
 // the world-centric "where do I join" question, which is what most sessions
 // open the tab to answer; フレンド stays person-centric for search/notes.
-// groups / worlds / profile join here as they are built (the account owner's
-// status moved out to the header widget, so there is no "自分" tab).
+// groups / profile join here as they are built (the account owner's status
+// moved out to the header widget, so there is no "自分" tab).
 const TABS = [
   { view: "join", label: "JOIN先", hint: "フレンドの滞在ワールドからJOIN先を探す" },
   { view: "friends", label: "フレンド", hint: "フレンドの在席・滞在先とメモを表示" },
+  { view: "worlds", label: "ワールド", hint: "お気に入り・最近訪れたワールドを一覧" },
   { view: "avatars", label: "アバター", hint: "所有アバターを更新日順に一覧" },
   { view: "prints", label: "プリント", hint: "Print の投稿と管理" },
   {
@@ -54,6 +56,9 @@ export function Layout() {
       </section>
       <section id="group-friends" hidden={activeView !== "friends"}>
         <FriendsView />
+      </section>
+      <section id="group-worlds" hidden={activeView !== "worlds"}>
+        <WorldsView />
       </section>
       <section id="group-avatars" hidden={activeView !== "avatars"}>
         <AvatarsView />

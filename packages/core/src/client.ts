@@ -8,6 +8,7 @@ import { AvatarsResource } from "./namespaces/avatars";
 import { FilesResource } from "./namespaces/files";
 import { FriendsResource } from "./namespaces/friends";
 import { InventoryResource } from "./namespaces/inventory";
+import { InviteResource } from "./namespaces/invite";
 import { NotesResource } from "./namespaces/notes";
 import { PrintsResource } from "./namespaces/prints";
 import { StatusResource } from "./namespaces/status";
@@ -26,6 +27,7 @@ export class VrcClient {
   readonly avatars: AvatarsResource;
   readonly inventory: InventoryResource;
   readonly files: FilesResource;
+  readonly invite: InviteResource;
 
   constructor(readonly transport: VrcTransport) {
     this.auth = new AuthResource(transport);
@@ -38,5 +40,6 @@ export class VrcClient {
     this.avatars = new AvatarsResource(transport);
     this.inventory = new InventoryResource(transport);
     this.files = new FilesResource(transport);
+    this.invite = new InviteResource(transport);
   }
 }

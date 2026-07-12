@@ -6,6 +6,7 @@ import { useWorldEntries, worldStore } from "../worldNames";
 import { CardModal } from "./friends/CardModal";
 import { groupByWorld, isPersonJoinable } from "./friends/organize";
 import { WorldCard } from "./join/WorldCard";
+import { WorldModal } from "./join/WorldModal";
 
 // World-centric, image-forward, zero-filter view for deciding where to join.
 // Person-centric search/notes management lives in FriendsView instead; both
@@ -15,6 +16,7 @@ export function JoinView() {
   const { people, status, lastUpdate } = useFriends();
   const worldEntryOf = useWorldEntries();
   const [openUserId, setOpenUserId] = useState<string | null>(null);
+  const [openWorldId, setOpenWorldId] = useState<string | null>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional mount-only load
   useEffect(() => {
@@ -60,10 +62,12 @@ export function JoinView() {
           {groups.map((g) => (
             <WorldCard
               key={g.key}
+              worldId={g.key}
               worldName={g.worldName}
               thumbnailUrl={worldEntryOf(g.key)?.thumbnailImageUrl ?? null}
               members={g.members}
               onOpenMember={setOpenUserId}
+              onOpenWorld={setOpenWorldId}
             />
           ))}
         </div>
@@ -72,6 +76,13 @@ export function JoinView() {
         userId={openUserId}
         onClose={() => setOpenUserId(null)}
         onNoteSaved={(userId, note) => friendsStore.updateNote(userId, note)}
+      />
+      <WorldModal
+        worldId={openWorldId}
+        worldName={openWorldId ? (worldEntryOf(openWorldId)?.name ?? null) : null}
+        thumbnailUrl={openWorldId ? (worldEntryOf(openWorldId)?.thumbnailImageUrl ?? null) : null}
+        members={groups.find((g) => g.key === openWorldId)?.members ?? []}
+        onClose={() => setOpenWorldId(null)}
       />
     </section>
   );

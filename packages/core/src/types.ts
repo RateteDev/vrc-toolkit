@@ -45,6 +45,9 @@ export interface VRChatFriend {
 export interface VRChatWorld {
   id?: string;
   name?: string;
+  description?: string;
+  authorName?: string;
+  capacity?: number;
   imageUrl?: string | null;
   thumbnailImageUrl?: string | null;
 }

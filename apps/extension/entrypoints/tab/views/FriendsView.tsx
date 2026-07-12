@@ -91,7 +91,7 @@ export function FriendsView() {
             title="更新"
             onClick={() => friendsStore.load(client)}
           >
-            <Icon name="refresh" size={15} />
+            <Icon name="refresh" size={16} />
           </button>
         </div>
         <div className="ffilters">

@@ -97,7 +97,7 @@ export function AvatarsGrid() {
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <LastUpdated at={lastUpdate} />
           <button type="button" className="refresh" aria-label="更新" title="更新" onClick={load}>
-            <Icon name="refresh" size={15} />
+            <Icon name="refresh" size={16} />
           </button>
         </div>
         {message && <p className="mstatus">{message}</p>}

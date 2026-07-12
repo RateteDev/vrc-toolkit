@@ -9,21 +9,13 @@ import {
 import { useEffect, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { LastUpdated } from "../../components/LastUpdated";
-import { type ViewModeOption, ViewToggle } from "../../components/ViewToggle";
+import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 
 const INV_TABS: { value: InventoryType; label: string }[] = [
   { value: "sticker", label: "ステッカー" },
   { value: "emoji", label: "絵文字" },
-];
-
-type ViewMode = "list" | "sm" | "lg";
-
-const VIEW_MODES: ViewModeOption<ViewMode>[] = [
-  { mode: "list", label: "リスト表示", icon: "list" },
-  { mode: "sm", label: "小カード表示", icon: "layout-grid" },
-  { mode: "lg", label: "大カード表示", icon: "layout-rows" },
 ];
 
 export function StickerInventoryCard({
@@ -42,7 +34,7 @@ export function StickerInventoryCard({
   const [items, setItems] = useState<InventoryItemSummary[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>("読み込み中…");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("sm");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [manualRefreshNonce, setManualRefreshNonce] = useState(0);
 
   // reloadNonce (bumped by the parent after an upload) and manualRefreshNonce
@@ -80,7 +72,7 @@ export function StickerInventoryCard({
   return (
     <section className="card">
       <div className="mhead">
-        <ViewToggle mode={viewMode} onChange={setViewMode} modes={VIEW_MODES} />
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
         <LastUpdated at={lastUpdate} />
         <button
           type="button"
@@ -89,7 +81,7 @@ export function StickerInventoryCard({
           title="更新"
           onClick={() => setManualRefreshNonce((n) => n + 1)}
         >
-          <Icon name="refresh" size={15} />
+          <Icon name="refresh" size={16} />
         </button>
       </div>
       <div className="ptoolbar">

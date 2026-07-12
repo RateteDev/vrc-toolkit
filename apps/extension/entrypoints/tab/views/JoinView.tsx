@@ -66,7 +66,7 @@ export function JoinView() {
               friendsStore.load(client);
             }}
           >
-            <Icon name="refresh" size={15} />
+            <Icon name="refresh" size={16} />
           </button>
         </div>
         {displayStatus ? <p className="mstatus">{displayStatus}</p> : null}

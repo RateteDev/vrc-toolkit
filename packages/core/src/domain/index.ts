@@ -11,6 +11,7 @@ export * from "./notes";
 export * from "./preprocess";
 export * from "./presence";
 export * from "./prints";
+export * from "./profile";
 export * from "./stats";
 export * from "./status";
 export * from "./trust";

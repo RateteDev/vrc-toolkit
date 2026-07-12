@@ -14,6 +14,9 @@ export interface AuthUserResponse {
   currentAvatarImageUrl?: string | null;
   currentAvatarThumbnailImageUrl?: string | null;
   currentAvatar?: string;
+  bio?: string;
+  bioLinks?: string[];
+  pronouns?: string;
 }
 
 export interface TwoFactorVerifyResponse {

@@ -14,7 +14,6 @@ export * from "./namespaces/inventory";
 export * from "./namespaces/invite";
 export * from "./namespaces/notes";
 export * from "./namespaces/prints";
-export * from "./namespaces/status";
 export * from "./namespaces/users";
 export * from "./namespaces/worlds";
 export { VrcError } from "./response";

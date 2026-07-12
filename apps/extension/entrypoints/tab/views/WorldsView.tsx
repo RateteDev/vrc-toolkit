@@ -1,21 +1,32 @@
-import { fmtWorld, type WorldSummary } from "@vrc-toolkit/core/domain";
+import type { VRChatWorld } from "@vrc-toolkit/core";
+import {
+  fmtWorld,
+  type WorldFavoriteGroup,
+  type WorldSummary,
+  worldFavoriteGroups,
+} from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
 import { LastUpdated } from "../components/LastUpdated";
 import { useVrc } from "../vrc";
 import { errorMessage } from "./errorMessage";
 import { WorldModal } from "./join/WorldModal";
+import { FavoriteGroupSection } from "./worlds/FavoriteGroupSection";
+import { groupFavorites } from "./worlds/groupFavorites";
 import { WorldGrid } from "./worlds/WorldGrid";
 
-// VRChat caps list endpoints at n=100; a single request per list (no paging),
-// per the unofficial-API policy against high-frequency/bulk calls. Truncation
-// beyond 100 favorites/recent worlds is visible via the count in the heading.
-const LIST_LIMIT = 100;
+// VRChat caps /worlds/recent at n=100; a single request (no paging), per the
+// unofficial-API policy against high-frequency/bulk calls. Favorites page to
+// exhaustion instead (see WorldsResource.favorites) since users can and do
+// exceed 100 favorites.
+const RECENT_LIMIT = 100;
 
-// The account owner's favorite and recently-visited worlds. Fetched once on
-// mount plus on manual 更新, matching AvatarsGrid's load model; no polling.
+// The account owner's favorite (grouped, collapsible) and recently-visited
+// worlds. Fetched once on mount plus on manual 更新, matching AvatarsGrid's
+// load model; no polling.
 export function WorldsView() {
   const client = useVrc();
-  const [favorites, setFavorites] = useState<WorldSummary[]>([]);
+  const [favorites, setFavorites] = useState<VRChatWorld[]>([]);
+  const [favoriteGroups, setFavoriteGroups] = useState<WorldFavoriteGroup[]>([]);
   const [recent, setRecent] = useState<WorldSummary[]>([]);
   const [message, setMessage] = useState("読み込み中…");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -23,9 +34,14 @@ export function WorldsView() {
 
   const load = useCallback(() => {
     setMessage("読み込み中…");
-    Promise.all([client.worlds.favorites(LIST_LIMIT), client.worlds.recent(LIST_LIMIT)])
-      .then(([favoriteWorlds, recentWorlds]) => {
-        setFavorites(favoriteWorlds.map(fmtWorld));
+    Promise.all([
+      client.worlds.favorites(),
+      client.worlds.favoriteGroups(),
+      client.worlds.recent(RECENT_LIMIT),
+    ])
+      .then(([favoriteWorlds, groups, recentWorlds]) => {
+        setFavorites(favoriteWorlds);
+        setFavoriteGroups(worldFavoriteGroups(groups));
         setRecent(recentWorlds.map(fmtWorld));
         setMessage("");
         setLastUpdate(new Date());
@@ -36,6 +52,8 @@ export function WorldsView() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const favoriteSections = groupFavorites(favorites, favoriteGroups);
 
   return (
     <section id="view-worlds">
@@ -48,12 +66,18 @@ export function WorldsView() {
         </div>
         {message ? <p className="mstatus">{message}</p> : null}
 
-        <WorldGrid
-          title="お気に入り"
-          worlds={favorites}
-          emptyMessage="お気に入りワールドはありません。"
-          onOpen={setOpenWorld}
-        />
+        <section className="wsec">
+          <h3 className="wsec-title">お気に入り ({favorites.length})</h3>
+          {favoriteSections.map((section) => (
+            <FavoriteGroupSection
+              key={section.key}
+              displayName={section.displayName}
+              worlds={section.worlds}
+              onOpen={setOpenWorld}
+            />
+          ))}
+        </section>
+
         <WorldGrid
           title="最近訪れたワールド"
           worlds={recent}

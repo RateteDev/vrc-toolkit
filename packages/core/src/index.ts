@@ -11,6 +11,7 @@ export * from "./namespaces/avatars";
 export * from "./namespaces/files";
 export * from "./namespaces/friends";
 export * from "./namespaces/inventory";
+export * from "./namespaces/invite";
 export * from "./namespaces/notes";
 export * from "./namespaces/prints";
 export * from "./namespaces/status";

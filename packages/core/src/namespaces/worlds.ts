@@ -1,11 +1,11 @@
 // Worlds namespace: single world lookup (used to resolve a friend's worldId
-// into a display name) plus the account owner's favorite/recent world lists.
-// A non-200 on get() (e.g. 404 for an unknown/private world) throws VrcError;
-// the caller falls back to a placeholder name.
+// into a display name) plus the account owner's favorite/recent world lists
+// and favorite groups. A non-200 on get() (e.g. 404 for an unknown/private
+// world) throws VrcError; the caller falls back to a placeholder name.
 
 import { VrcResource } from "../resource";
-import type { VRChatWorld } from "../types";
-import { buildQuery } from "./_shared";
+import type { VRChatFavoriteGroup, VRChatWorld } from "../types";
+import { buildQuery, PAGE_SIZE, paginateAllGuarded } from "./_shared";
 
 export class WorldsResource extends VrcResource {
   // GET /worlds/{worldId}. Returns the raw world verbatim.
@@ -13,13 +13,29 @@ export class WorldsResource extends VrcResource {
     return this.request<VRChatWorld>(`/worlds/${encodeURIComponent(worldId)}`);
   }
 
-  // GET /worlds/favorites?n={n}. One request; the caller picks a fixed n
-  // (VRChat caps n at 100) instead of paging, per the unofficial-API policy.
-  favorites(n: number): Promise<VRChatWorld[]> {
-    return this.requestArray<VRChatWorld>(`/worlds/favorites${buildQuery({ n })}`);
+  // GET /worlds/favorites?n=100&offset={k}, paged to exhaustion. Real-API
+  // verified: offset paging works (280 favorites -> 100/100/80 pages), but
+  // the guarded paginator is used anyway as defense against a future silent
+  // regression to an ignored offset (mirrors prints.listAll/inventory.listAll).
+  // favoriteId (unique per favorite entry) is preferred as the dedup key over
+  // id (worldId), which is not guaranteed unique across groups.
+  favorites(): Promise<VRChatWorld[]> {
+    return paginateAllGuarded(
+      PAGE_SIZE,
+      (offset) =>
+        this.requestArray<VRChatWorld>(`/worlds/favorites${buildQuery({ n: PAGE_SIZE, offset })}`),
+      (w) => w.favoriteId ?? w.id,
+    );
   }
 
-  // GET /worlds/recent?n={n}. Same single-request policy as favorites().
+  // GET /favorite/groups. Raw passthrough across ALL favorite types
+  // (avatar/world/friend); callers filter by `type`. Small, unpaged list —
+  // one request, per the unofficial-API policy.
+  favoriteGroups(): Promise<VRChatFavoriteGroup[]> {
+    return this.requestArray<VRChatFavoriteGroup>("/favorite/groups");
+  }
+
+  // GET /worlds/recent?n={n}. Single-request policy (VRChat caps n at 100).
   recent(n: number): Promise<VRChatWorld[]> {
     return this.requestArray<VRChatWorld>(`/worlds/recent${buildQuery({ n })}`);
   }

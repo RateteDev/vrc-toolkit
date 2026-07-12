@@ -60,6 +60,17 @@ export interface VRChatWorld {
   favoriteId?: string;
 }
 
+// GET /favorite/groups returns one entry per favorite group across ALL
+// favorite types (avatar/world/friend), not just worlds; callers filter by
+// `type`. `name` is the fixed slot id (worlds1..worlds4 for world groups);
+// `displayName` is user-renamable and is what the UI should show.
+export interface VRChatFavoriteGroup {
+  name?: string;
+  displayName?: string;
+  type?: string;
+  visibility?: string;
+}
+
 // Minimal shape of a VRChat File object (POST /file/image response, GET
 // /file/{fileId}), only the fields needed to resolve the latest version's URL.
 export interface VRChatFile {

@@ -225,6 +225,17 @@ body {
 .wcard { font: inherit; text-align: left; padding: 0; border: 1px solid var(--border); cursor: pointer; transition: border-color .18s; }
 .wcard:hover { border-color: var(--accent); }
 .wcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Native <details>/<summary> favorite-group section: default closed, only the
+   summary row (marker + label) is visible until toggled. */
+.wgroup { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 8px; padding: 0 12px; }
+.wgroup[open] { padding-bottom: 12px; }
+.wgroup-summary { font-weight: 600; font-size: 13.5px; padding: 10px 0; cursor: pointer; list-style: none; }
+.wgroup-summary::-webkit-details-marker { display: none; }
+.wgroup-summary::marker { content: ''; }
+.wgroup-summary::before { content: '▸'; display: inline-block; width: 1em; color: var(--faint); transition: transform .15s; }
+.wgroup[open] .wgroup-summary::before { transform: rotate(90deg); }
+.wgroup-summary:hover { color: var(--accent-strong); }
+.wgroup-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sradios { border: none; padding: 0; margin: 0 0 16px; display: grid; gap: 8px; }
 .sradios legend { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
 .sradios label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }

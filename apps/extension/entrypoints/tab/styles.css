@@ -356,6 +356,8 @@ textarea { resize: vertical; min-height: 62px; }
 .hpop-textrow input { flex: 1; }
 .hpop-apply { font: inherit; font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: 1px solid var(--accent-strong); border-radius: 9px; padding: 0 14px; cursor: pointer; flex: none; }
 .hpop-apply:disabled { opacity: .5; cursor: default; }
+.hpop-editlink { display: block; width: 100%; text-align: left; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: none; border-top: 1px solid var(--border); margin-top: 12px; padding: 12px 0 0; cursor: pointer; }
+.hpop-editlink:hover { color: var(--accent-strong); }
 
 /* ── post / select toolbar (prints, stickers) ── */
 .ptoolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }

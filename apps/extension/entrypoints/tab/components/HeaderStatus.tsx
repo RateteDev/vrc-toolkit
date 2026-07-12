@@ -3,6 +3,7 @@ import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useAccount } from "../account";
 import { statusDotClass } from "../status";
 import { cssUrl } from "../views/cssUrl";
+import { MyCardModal } from "./MyCardModal";
 
 const LOCATION_LABELS: Record<ReturnType<typeof parseLocation>["kind"], string> = {
   instance: "ワールドに滞在中",
@@ -29,6 +30,9 @@ const STATUS_PRESETS = ["作業中", "仕事中", "イベント中", "約束あ�
 export function HeaderStatus() {
   const { account } = useAccount();
   const [open, setOpen] = useState(false);
+  // Lives here (not in StatusPopover) so it survives the popover closing when
+  // "プロフィールを編集…" is clicked.
+  const [cardOpen, setCardOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,12 +73,20 @@ export function HeaderStatus() {
           <span className="hstatus-desc">{account.statusDescription || account.status || "—"}</span>
         </span>
       </button>
-      {open ? <StatusPopover /> : null}
+      {open ? (
+        <StatusPopover
+          onEditProfile={() => {
+            setOpen(false);
+            setCardOpen(true);
+          }}
+        />
+      ) : null}
+      <MyCardModal open={cardOpen} onClose={() => setCardOpen(false)} />
     </div>
   );
 }
 
-function StatusPopover() {
+function StatusPopover({ onEditProfile }: { onEditProfile: () => void }) {
   const { account, updateStatus } = useAccount();
   const [text, setText] = useState(account?.statusDescription ?? "");
   const [busy, setBusy] = useState(false);
@@ -164,6 +176,9 @@ function StatusPopover() {
         </div>
       </div>
       {error ? <p className="mstatus err">{error}</p> : null}
+      <button type="button" className="hpop-editlink" onClick={onEditProfile}>
+        プロフィールを編集…
+      </button>
     </div>
   );
 }

@@ -402,21 +402,21 @@ textarea { resize: vertical; min-height: 62px; }
 /* ── join先: world cards ── */
 .jworld-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
 .jworld { display: flex; align-items: flex-start; gap: 16px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.jthumb { display: block; width: 144px; height: 108px; flex: none; border: none; padding: 0; cursor: pointer; border-radius: 9px; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; transition: box-shadow .14s; }
+.jthumb { display: block; width: 192px; height: 144px; flex: none; border: none; padding: 0; cursor: pointer; border-radius: 9px; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; transition: box-shadow .14s; }
 .jthumb:hover { box-shadow: 0 0 0 2px var(--accent) inset; }
 .jbody { min-width: 0; flex: 1; padding-top: 3px; }
 .jhead { display: flex; align-items: center; gap: 8px; width: 100%; font: inherit; text-align: left; border: none; padding: 0; background: none; cursor: pointer; border-radius: 6px; }
 .jhead:hover .jname { color: var(--accent-strong); }
 .jname { font-family: var(--serif); font-weight: 500; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jcount { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; flex: none; font-variant-numeric: tabular-nums; }
-.jchip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px 3px 3px; cursor: pointer; transition: border-color .14s, background .14s; }
+.jchip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px 3px 3px; cursor: pointer; transition: border-color .14s, background .14s; }
 .jchip:hover { border-color: var(--accent); background: var(--accent-tint); }
 .jchip-static { cursor: default; }
 .jchip-static:hover { border-color: var(--border); background: var(--surface); }
-.jchip-avatar { position: relative; width: 20px; height: 20px; border-radius: 50%; flex: none; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.jchip-avatar { position: relative; width: 28px; height: 28px; border-radius: 50%; flex: none; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
 /* Colors come from the shared .fdot status classes; this only repositions
    and shrinks the dot onto the chip avatar's corner. */
-.jchip-dot { position: absolute; right: -1px; bottom: -1px; width: 7px; height: 7px; border: 1.5px solid var(--surface); }
+.jchip-dot { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border: 1.5px solid var(--surface); }
 
 /* ── instance row: shared by WorldCard's JOIN先 list and WorldModal's instance
    section (InstanceRowCard). One row = one instance's judgment material plus

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { LastUpdated } from "../components/LastUpdated";
 import { friendsStore, useFriends } from "../friendsStore";
+import { instanceStore } from "../instanceStore";
 import { useVrc } from "../vrc";
 import { useWorldEntries, worldStore } from "../worldNames";
 import { CardModal } from "./friends/CardModal";
@@ -52,7 +53,16 @@ export function JoinView() {
       <section className="card">
         <div className="mhead">
           <LastUpdated at={lastUpdate} />
-          <button type="button" className="refresh" onClick={() => friendsStore.load(client)}>
+          <button
+            type="button"
+            className="refresh"
+            onClick={() => {
+              // Occupancy is volatile: a manual refresh should re-fetch
+              // instance detail too, not keep serving this session's cache.
+              instanceStore.clear();
+              friendsStore.load(client);
+            }}
+          >
             更新
           </button>
         </div>

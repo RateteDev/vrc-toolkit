@@ -398,13 +398,33 @@ textarea { resize: vertical; min-height: 62px; }
 .jhead:hover .jname { color: var(--accent-strong); }
 .jname { font-family: var(--serif); font-weight: 500; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jcount { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; flex: none; font-variant-numeric: tabular-nums; }
-.jmembers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .jchip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px 3px 3px; cursor: pointer; transition: border-color .14s, background .14s; }
 .jchip:hover { border-color: var(--accent); background: var(--accent-tint); }
+.jchip-static { cursor: default; }
+.jchip-static:hover { border-color: var(--border); background: var(--surface); }
 .jchip-avatar { position: relative; width: 20px; height: 20px; border-radius: 50%; flex: none; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
 /* Colors come from the shared .fdot status classes; this only repositions
    and shrinks the dot onto the chip avatar's corner. */
 .jchip-dot { position: absolute; right: -1px; bottom: -1px; width: 7px; height: 7px; border: 1.5px solid var(--surface); }
+
+/* ── instance row: shared by WorldCard's JOIN先 list and WorldModal's instance
+   section (InstanceRowCard). One row = one instance's judgment material plus
+   its own self-invite JOIN button. ── */
+.instrows { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.instrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fcfaf4; flex-wrap: wrap; }
+.instrow-info { min-width: 0; flex: 1 1 240px; }
+.instrow-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11.5px; }
+.instrow-badge { display: inline-block; font-weight: 700; color: #fff; background: var(--muted); border-radius: 999px; padding: 1px 8px; }
+.instrow-badge--public { background: #4caf50; }
+.instrow-badge--friends, .instrow-badge--friends-plus { background: #1778ff; }
+.instrow-badge--invite, .instrow-badge--invite-plus { background: #ef5350; }
+.instrow-badge--group, .instrow-badge--group-plus, .instrow-badge--group-public { background: #8143e6; }
+.instrow-region { color: var(--muted); font-weight: 600; }
+.instrow-occ { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.instrow-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.instrow-invite { display: flex; align-items: center; gap: 8px; flex: none; }
+.instrow-join { white-space: nowrap; }
+.instrow-reason { font-size: 12px; color: var(--muted); }
 
 /* ── trust rank colors (official-style) ── */
 .trust-visitor { color: #8a8f98; }

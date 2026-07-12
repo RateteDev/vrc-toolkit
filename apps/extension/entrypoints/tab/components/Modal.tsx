@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface Props {
   title?: string;
@@ -23,7 +24,12 @@ export function Modal({ title, hint, ariaLabel, onRequestClose, sheetClass, chil
     return () => document.removeEventListener("keydown", onKey);
   }, [onRequestClose]);
 
-  return (
+  // Portaled to <body>: Chromium treats an element with a transform-bearing
+  // animation (e.g. the header's .rise) as the containing block for
+  // position:fixed descendants, so a modal rendered inside such a subtree gets
+  // pinned to that box instead of the viewport. The portal makes every modal
+  // immune to its caller's stacking/transform context.
+  return createPortal(
     <div
       className="modal"
       role="dialog"
@@ -45,6 +51,7 @@ export function Modal({ title, hint, ariaLabel, onRequestClose, sheetClass, chil
         {hint ? <p className="hint">{hint}</p> : null}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

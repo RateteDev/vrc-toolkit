@@ -454,8 +454,10 @@ textarea { resize: vertical; min-height: 62px; }
 /* ── world detail modal (JOIN先): full-width hero image, title with a small
    copy icon, world ID demoted to a faint line, meta row, description, then
    the shared instance rows and a small text link to the official site. ── */
-.world-sheet { max-width: 560px; padding-top: 0; overflow: hidden; }
-.world-hero { width: calc(100% + 40px); margin: 0 -20px 16px; aspect-ratio: 16 / 9; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
+/* overflow stays auto (inherited from .sheet) so a tall modal scrolls; the
+   hero clips its own top corners instead of relying on sheet overflow. */
+.world-sheet { max-width: 560px; padding-top: 0; }
+.world-hero { width: calc(100% + 40px); margin: 0 -20px 16px; aspect-ratio: 16 / 9; border-radius: var(--radius) var(--radius) 0 0; background-color: #efeadd; background-size: cover; background-position: center; background-repeat: no-repeat; }
 /* The hero image sits under the modal's absolute-positioned close button;
    give it a backdrop so it stays legible against arbitrary image content. */
 .world-sheet .close { background: rgba(255,253,248,.85); }

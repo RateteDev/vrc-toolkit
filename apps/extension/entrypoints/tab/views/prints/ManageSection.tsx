@@ -136,8 +136,8 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
   return (
     <section className="card">
       <div className="mhead">
-        <LastUpdated at={lastUpdate} />
         <ViewToggle mode={viewMode} onChange={setViewMode} />
+        <LastUpdated at={lastUpdate} />
         <button type="button" className="refresh" onClick={load} disabled={busy}>
           更新
         </button>

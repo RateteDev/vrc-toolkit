@@ -72,7 +72,6 @@ export function StickerInventoryCard({
   return (
     <section className="card">
       <div className="mhead">
-        <LastUpdated at={lastUpdate} />
         <div className="view-toggle">
           <button
             type="button"
@@ -115,6 +114,7 @@ export function StickerInventoryCard({
             </svg>
           </button>
         </div>
+        <LastUpdated at={lastUpdate} />
         <button
           type="button"
           className="refresh"

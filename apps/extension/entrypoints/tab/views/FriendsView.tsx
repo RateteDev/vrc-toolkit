@@ -81,8 +81,8 @@ export function FriendsView() {
     <section id="view-friends">
       <section className="card">
         <div className="mhead">
-          <LastUpdated at={lastUpdate} />
           <ViewToggle mode={gridMode} onChange={setGridMode} />
+          <LastUpdated at={lastUpdate} />
           <button type="button" className="refresh" onClick={() => friendsStore.load(client)}>
             更新
           </button>

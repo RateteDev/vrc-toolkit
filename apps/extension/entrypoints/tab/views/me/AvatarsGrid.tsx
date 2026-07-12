@@ -95,8 +95,8 @@ export function AvatarsGrid() {
     <section id="view-avatars">
       <section className="card">
         <div className="mhead">
-          <LastUpdated at={lastUpdate} />
           <ViewToggle mode={viewMode} onChange={setViewMode} />
+          <LastUpdated at={lastUpdate} />
           <button type="button" className="refresh" onClick={load}>
             更新
           </button>

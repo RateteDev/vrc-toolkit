@@ -100,7 +100,7 @@ body {
 
 /* manage */
 .mhead { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
-.refresh { display: grid; place-items: center; width: 28px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: none; color: var(--accent-strong); cursor: pointer; transition: color .12s, background .12s, border-color .12s; }
+.refresh { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 7px; background: none; color: var(--accent-strong); cursor: pointer; transition: color .12s, background .12s, border-color .12s; }
 .refresh:hover { border-color: var(--accent); background: var(--accent-tint); }
 .mstatus { color: var(--muted); font-size: 14px; margin: 14px 2px 2px; }
 .mstatus.err { color: var(--accent-strong); }
@@ -272,7 +272,7 @@ body {
 
 /* view toggle */
 .view-toggle { display: inline-flex; gap: 2px; }
-.vtog { display: grid; place-items: center; width: 28px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: none; color: var(--faint); cursor: pointer; transition: color .12s, background .12s, border-color .12s; }
+.vtog { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 7px; background: none; color: var(--faint); cursor: pointer; transition: color .12s, background .12s, border-color .12s; }
 .vtog:hover { color: var(--ink); border-color: var(--accent); }
 .vtog.active { color: var(--accent-strong); background: var(--accent-tint); border-color: var(--accent); }
 
@@ -467,17 +467,13 @@ textarea { resize: vertical; min-height: 62px; }
 /* Popover above the tile: handle/service on top, full URL below. Shown on
    hover and keyboard focus; pointer-events stays off so it never traps the
    cursor. */
-.biolink-tip { position: absolute; left: 50%; bottom: calc(100% + 9px); transform: translateX(-50%) translateY(3px); display: flex; flex-direction: column; gap: 2px; width: max-content; max-width: 300px; padding: 9px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .14s ease, transform .18s cubic-bezier(.2,.7,.2,1); z-index: 5; }
+.biolink-tip { position: absolute; left: 50%; bottom: calc(100% + 9px); transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(3px); display: flex; flex-direction: column; gap: 2px; width: max-content; max-width: 300px; padding: 9px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .14s ease, transform .18s cubic-bezier(.2,.7,.2,1); z-index: 5; }
 /* Arrow: a rotated square sharing the popover border. */
-.biolink-tip::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 8px; transform: translateX(-50%) rotate(45deg); background: var(--surface); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.biolink:hover .biolink-tip, .biolink:focus-visible .biolink-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.biolink-tip::after { content: ""; position: absolute; left: calc(50% + var(--arrow-shift, 0px)); bottom: -5px; width: 8px; height: 8px; transform: translateX(-50%) rotate(45deg); background: var(--surface); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.biolink:hover .biolink-tip, .biolink:focus-visible .biolink-tip { opacity: 1; transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(0); }
 .biolink-tip-main { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Full URL, wrapping up to two lines; anything longer is clamped with an ellipsis. */
 .biolink-tip-url { font-size: 12px; color: var(--muted); line-height: 1.4; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-/* Left-edge tile: keep the popover inside the sheet. */
-.biolink:first-child .biolink-tip { left: 0; transform: translateX(0) translateY(3px); }
-.biolink:first-child:hover .biolink-tip, .biolink:first-child:focus-visible .biolink-tip { transform: translateX(0) translateY(0); }
-.biolink:first-child .biolink-tip::after { left: 18px; transform: rotate(45deg); }
 
 /* wider upload modal sheet */
 .upload-sheet { max-width: 720px; }

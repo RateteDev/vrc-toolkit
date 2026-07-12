@@ -9,14 +9,38 @@
 // hover: URL preview stays with the browser's native long-press menu, which a
 // long-press tooltip would otherwise hijack.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { resolveLinkMeta } from "./linkMeta";
+
+// Popover clearance from the modal sheet's left/right edges.
+const TIP_MARGIN_PX = 12;
 
 function LinkTile({ url }: { url: string }) {
   const meta = resolveLinkMeta(url);
   const [broken, setBroken] = useState(false);
+  const tileRef = useRef<HTMLAnchorElement | null>(null);
+  const tipRef = useRef<HTMLSpanElement | null>(null);
   const label = meta.serviceName ?? meta.host;
   const ariaLabel = meta.handle ? `${label} ${meta.handle}` : label;
+
+  // CSS alone cannot know a tile's distance to the sheet edge, so on each
+  // show, measure and shift the (still invisible) popover to stay inside the
+  // sheet; the arrow gets the opposite shift to keep pointing at the tile.
+  const positionTip = () => {
+    const tile = tileRef.current;
+    const tip = tipRef.current;
+    const sheet = tile?.closest(".sheet");
+    if (!tile || !tip || !sheet) return;
+    const tileRect = tile.getBoundingClientRect();
+    const sheetRect = sheet.getBoundingClientRect();
+    const width = tip.offsetWidth;
+    const centered = tileRect.left + tileRect.width / 2 - width / 2;
+    const min = sheetRect.left + TIP_MARGIN_PX;
+    const max = sheetRect.right - TIP_MARGIN_PX - width;
+    const shift = Math.min(Math.max(centered, min), Math.max(min, max)) - centered;
+    tile.style.setProperty("--tip-shift", `${shift}px`);
+    tile.style.setProperty("--arrow-shift", `${-shift}px`);
+  };
 
   const icon =
     meta.faviconUrl && !broken ? (
@@ -43,14 +67,17 @@ function LinkTile({ url }: { url: string }) {
   // tile, which keeps the native title since it has no popover.
   return meta.faviconUrl ? (
     <a
+      ref={tileRef}
       className="biolink"
       href={url}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={ariaLabel}
+      onMouseEnter={positionTip}
+      onFocus={positionTip}
     >
       {icon}
-      <span className="biolink-tip" aria-hidden="true">
+      <span ref={tipRef} className="biolink-tip" aria-hidden="true">
         <span className="biolink-tip-main">{meta.handle ?? label}</span>
         <span className="biolink-tip-url">{url}</span>
       </span>

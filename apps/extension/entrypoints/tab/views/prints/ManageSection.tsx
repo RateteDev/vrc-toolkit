@@ -147,7 +147,7 @@ export function ManageSection({ refreshToken, onOpenUpload }: Props) {
           onClick={load}
           disabled={busy}
         >
-          <Icon name="refresh" size={15} />
+          <Icon name="refresh" size={16} />
         </button>
       </div>
       <div className="ptoolbar">

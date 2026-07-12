@@ -1,43 +1,33 @@
 import { Icon } from "./Icon";
 
-// Shared view-mode toggle. Defaults to the common list/card pair; views with
-// a different density set (e.g. stickers' list/sm/lg) pass their own options.
+// Shared view-mode toggle (list / card), used by the friends, avatars, prints,
+// and stickers views.
 
 export type ViewMode = "list" | "card";
 
-export interface ViewModeOption<M extends string> {
-  mode: M;
-  label: string;
-  icon: string;
-}
-
-const DEFAULT_MODES: ViewModeOption<ViewMode>[] = [
+const MODES: { mode: ViewMode; label: string; icon: string }[] = [
   { mode: "list", label: "リスト表示", icon: "list" },
   { mode: "card", label: "カード表示", icon: "layout-grid" },
 ];
 
-interface Props<M extends string> {
-  mode: M;
-  onChange: (mode: M) => void;
-  modes?: ViewModeOption<M>[];
+interface Props {
+  mode: ViewMode;
+  onChange: (mode: ViewMode) => void;
 }
 
-export function ViewToggle<M extends string = ViewMode>({ mode, onChange, modes }: Props<M>) {
-  // The cast is sound in practice: callers omit `modes` only where M is the
-  // default ViewMode.
-  const options = (modes ?? DEFAULT_MODES) as ViewModeOption<M>[];
+export function ViewToggle({ mode, onChange }: Props) {
   return (
     <div className="view-toggle">
-      {options.map((o) => (
+      {MODES.map((m) => (
         <button
-          key={o.mode}
+          key={m.mode}
           type="button"
-          className={mode === o.mode ? "vtog active" : "vtog"}
-          aria-label={o.label}
-          title={o.label}
-          onClick={() => onChange(o.mode)}
+          className={mode === m.mode ? "vtog active" : "vtog"}
+          aria-label={m.label}
+          title={m.label}
+          onClick={() => onChange(m.mode)}
         >
-          <Icon name={o.icon} size={14} />
+          <Icon name={m.icon} size={15} />
         </button>
       ))}
     </div>

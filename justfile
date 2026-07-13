@@ -57,10 +57,10 @@ ext-check:
     cd apps/extension && bunx wxt prepare
     cd apps/extension && bunx tsc --noEmit
 
-# Run extension tests (skips cleanly until the first test file exists)
+# Run extension tests
 [group('Extension')]
 ext-test:
-    cd apps/extension && if find . -type d \( -name node_modules -o -name .output -o -name .wxt \) -prune -o -type f \( -name '*.test.ts' -o -name '*.test.tsx' \) -print | grep -q .; then bun test; else echo "No extension tests yet; skipping."; fi
+    cd apps/extension && bun test
 
 # Run extension CI (check → test)
 [group('Extension')]

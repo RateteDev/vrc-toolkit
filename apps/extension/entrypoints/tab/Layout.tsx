@@ -2,6 +2,7 @@ import { useState } from "react";
 import { HeaderStatus } from "./components/HeaderStatus";
 import { AvatarsView } from "./views/AvatarsView";
 import { FriendsView } from "./views/FriendsView";
+import { GroupsView } from "./views/GroupsView";
 import { JoinView } from "./views/JoinView";
 import { PrintsView } from "./views/PrintsView";
 import { StickersView } from "./views/StickersView";
@@ -16,6 +17,7 @@ const TABS = [
   { view: "join", label: "JOIN先", hint: "フレンドの滞在ワールドからJOIN先を探す" },
   { view: "friends", label: "フレンド", hint: "フレンドの在席・滞在先とメモを表示" },
   { view: "worlds", label: "ワールド", hint: "お気に入り・最近訪れたワールドを一覧" },
+  { view: "groups", label: "グループ", hint: "所属グループの投稿と開催中インスタンスを表示" },
   { view: "avatars", label: "アバター", hint: "所有アバターを更新日順に一覧" },
   { view: "prints", label: "プリント", hint: "Print の投稿と管理" },
   {
@@ -59,6 +61,9 @@ export function Layout() {
       </section>
       <section id="group-worlds" hidden={activeView !== "worlds"}>
         <WorldsView />
+      </section>
+      <section id="group-groups" hidden={activeView !== "groups"}>
+        <GroupsView />
       </section>
       <section id="group-avatars" hidden={activeView !== "avatars"}>
         <AvatarsView />

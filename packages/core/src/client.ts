@@ -7,6 +7,7 @@ import { AuthResource } from "./namespaces/auth";
 import { AvatarsResource } from "./namespaces/avatars";
 import { FilesResource } from "./namespaces/files";
 import { FriendsResource } from "./namespaces/friends";
+import { GroupsResource } from "./namespaces/groups";
 import { InstancesResource } from "./namespaces/instances";
 import { InventoryResource } from "./namespaces/inventory";
 import { InviteResource } from "./namespaces/invite";
@@ -20,6 +21,7 @@ export class VrcClient {
   readonly auth: AuthResource;
   readonly users: UsersResource;
   readonly worlds: WorldsResource;
+  readonly groups: GroupsResource;
   readonly friends: FriendsResource;
   readonly notes: NotesResource;
   readonly prints: PrintsResource;
@@ -33,6 +35,7 @@ export class VrcClient {
     this.auth = new AuthResource(transport);
     this.users = new UsersResource(transport);
     this.worlds = new WorldsResource(transport);
+    this.groups = new GroupsResource(transport);
     this.friends = new FriendsResource(transport);
     this.notes = new NotesResource(transport);
     this.prints = new PrintsResource(transport);

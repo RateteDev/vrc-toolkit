@@ -10,6 +10,7 @@ export * from "./namespaces/auth";
 export * from "./namespaces/avatars";
 export * from "./namespaces/files";
 export * from "./namespaces/friends";
+export * from "./namespaces/groups";
 export * from "./namespaces/inventory";
 export * from "./namespaces/invite";
 export * from "./namespaces/notes";

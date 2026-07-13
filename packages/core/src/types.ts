@@ -106,3 +106,75 @@ export interface PrintUploadResponse {
   note?: string | null;
   timestamp?: string;
 }
+
+// One entry of GET /users/{userId}/groups. `groupId` is the `grp_...` id;
+// `id` is also present but `groupId` is the canonical group reference used to
+// associate posts and instances. `lastPostCreatedAt`/`lastPostReadAt` are ISO
+// strings or null. All optional since the endpoint is undocumented.
+export interface VRChatUserGroup {
+  id?: string;
+  groupId?: string;
+  name?: string;
+  shortCode?: string;
+  discriminator?: string;
+  description?: string;
+  iconUrl?: string | null;
+  bannerUrl?: string | null;
+  memberCount?: number;
+  isRepresenting?: boolean;
+  ownerId?: string;
+  privacy?: string;
+  memberVisibility?: string;
+  lastPostCreatedAt?: string | null;
+  lastPostReadAt?: string | null;
+}
+
+// One entry of GET /groups/{groupId}/posts .posts[]. `text` may carry raw
+// newlines; the UI renders it as plain pre-wrapped text (no markdown).
+export interface VRChatGroupPost {
+  id?: string;
+  groupId?: string;
+  authorId?: string;
+  editorId?: string;
+  title?: string;
+  text?: string;
+  imageId?: string | null;
+  imageUrl?: string | null;
+  roleIds?: string[];
+  visibility?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// GET /groups/{groupId}/posts envelope: a page of posts plus the total count,
+// used to decide whether more pages remain.
+export interface VRChatGroupPostsPage {
+  posts?: VRChatGroupPost[];
+  total?: number;
+}
+
+// One entry of GET /users/{userId}/instances/groups .instances[]: a full
+// instance object. Note this endpoint reports occupancy as `userCount` (not
+// `n_users`). There is no top-level groupId; the owning group is derived by
+// parsing the `~group(grp_...)` tag from `location`.
+export interface VRChatGroupInstance {
+  instanceId?: string;
+  location?: string;
+  worldId?: string;
+  name?: string;
+  type?: string;
+  region?: string;
+  userCount?: number;
+  capacity?: number;
+  world?: {
+    name?: string;
+    imageUrl?: string | null;
+    thumbnailImageUrl?: string | null;
+  } | null;
+}
+
+// GET /users/{userId}/instances/groups envelope.
+export interface VRChatGroupInstancesResponse {
+  fetchedAt?: string;
+  instances?: VRChatGroupInstance[];
+}

@@ -1,5 +1,12 @@
+import type { VRChatAvatar } from "@vrc-toolkit/core";
 import { VrcError } from "@vrc-toolkit/core";
-import { type AvatarSummary, fmtAvatar, fmtDate } from "@vrc-toolkit/core/domain";
+import {
+  type AvatarFavoriteGroup,
+  type AvatarSummary,
+  avatarFavoriteGroups,
+  fmtAvatar,
+  fmtDate,
+} from "@vrc-toolkit/core/domain";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { LastUpdated } from "../../components/LastUpdated";
@@ -7,6 +14,9 @@ import { type ViewMode, ViewToggle } from "../../components/ViewToggle";
 import { useVrc } from "../../vrc";
 import { cssUrl } from "../cssUrl";
 import { AvatarImageModal } from "./AvatarImageModal";
+import { ReleaseBadge, WornBadge } from "./avatarBadges";
+import { FavoriteAvatarSection } from "./FavoriteAvatarSection";
+import { groupAvatarFavorites } from "./groupAvatarFavorites";
 
 function describeError(err: unknown): string {
   if (err instanceof VrcError) {
@@ -14,10 +24,6 @@ function describeError(err: unknown): string {
   }
   return `ネットワークエラー: ${err instanceof Error ? err.message : String(err)}`;
 }
-
-// Known statuses render as an icon badge; unknown values fall back to the
-// plain text badge so new VRChat statuses stay visible.
-const REL_ICONS: Record<string, string> = { public: "world", private: "lock", hidden: "eye-off" };
 
 // Platform values as reported by unityPackages[].platform; unrecognized values
 // render verbatim rather than being hidden, since VRChat may add new targets.
@@ -34,28 +40,34 @@ function platformLabel(platform: string): string {
 export function AvatarsGrid() {
   const client = useVrc();
   const [avatars, setAvatars] = useState<AvatarSummary[]>([]);
+  const [favoriteAvatars, setFavoriteAvatars] = useState<VRChatAvatar[]>([]);
+  const [favoriteGroups, setFavoriteGroups] = useState<AvatarFavoriteGroup[]>([]);
+  const [currentAvatarId, setCurrentAvatarId] = useState<string | null>(null);
   const [message, setMessage] = useState("読み込み中…");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [imageModalAvatarId, setImageModalAvatarId] = useState<string | null>(null);
 
-  // One request per load: listAll pages GET /avatars?user=me&releaseStatus=all to
-  // exhaustion internally, still a single user-initiated action.
+  // One request per load: listAll/favorites each page their endpoint to
+  // exhaustion internally, but the four calls together are still a single
+  // user-initiated action (mount or manual 更新), matching WorldsView's model.
   const load = useCallback(() => {
     setMessage("読み込み中…");
-    client.avatars
-      .listAll({ user: "me", releaseStatus: "all" })
-      .then((raw) => {
+    Promise.all([
+      client.avatars.listAll({ user: "me", releaseStatus: "all" }),
+      client.avatars.favorites(),
+      client.worlds.favoriteGroups(),
+      client.auth.currentUser(),
+    ])
+      .then(([raw, favRaw, groups, user]) => {
         const list = raw.map(fmtAvatar);
-        if (list.length === 0) {
-          setAvatars([]);
-          setMessage("アバターがありません。");
-          return;
-        }
         list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
         setAvatars(list);
-        setMessage("");
+        setFavoriteAvatars(favRaw);
+        setFavoriteGroups(avatarFavoriteGroups(groups));
+        setCurrentAvatarId(user?.currentAvatar ?? null);
+        setMessage(list.length === 0 ? "アバターがありません。" : "");
         setLastUpdate(new Date());
       })
       .catch((err) => setMessage(describeError(err)));
@@ -65,18 +77,8 @@ export function AvatarsGrid() {
     load();
   }, [load]);
 
-  // Determine "worn" status just-in-time from GET /auth/user rather than
-  // caching it, since the account context does not expose currentAvatar and a
-  // stale cache could mislabel the confirm dialog. Best-effort: an unreadable
-  // response must not block deletion, just skip the warning line.
   async function handleDelete(avatar: AvatarSummary) {
-    let warning = "";
-    try {
-      const user = await client.auth.currentUser();
-      if (user?.currentAvatar === avatar.id) warning = "着用中のアバターです。\n";
-    } catch {
-      // Best-effort only; see comment above.
-    }
+    const warning = currentAvatarId === avatar.id ? "着用中のアバターです。\n" : "";
     const question = `${warning}このアバターを削除します。元に戻せません。よろしいですか？\n${avatar.name || avatar.id}`;
     if (!window.confirm(question)) return;
     setBusyId(avatar.id);
@@ -90,6 +92,25 @@ export function AvatarsGrid() {
     }
   }
 
+  // Switching is a single explicit-click write (confirm -> busy guard -> PUT
+  // .../select), per the unofficial-API policy against automated/high-frequency
+  // writes. The worn indicator updates from the response instead of a reload.
+  async function handleSwitch(avatarId: string, name: string) {
+    if (busyId || currentAvatarId === avatarId) return;
+    if (!window.confirm(`「${name || avatarId}」に着替えますか？`)) return;
+    setBusyId(avatarId);
+    try {
+      const user = await client.avatars.select(avatarId);
+      setCurrentAvatarId(user?.currentAvatar ?? avatarId);
+    } catch (err) {
+      window.alert(describeError(err));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const favoriteSections = groupAvatarFavorites(favoriteAvatars, favoriteGroups);
+
   return (
     <section id="view-avatars">
       <section className="card">
@@ -101,75 +122,95 @@ export function AvatarsGrid() {
           </button>
         </div>
         {message && <p className="mstatus">{message}</p>}
-        <div className={`agrid view-${viewMode}`}>
-          {avatars.map((avatar) => {
-            const busy = busyId === avatar.id;
-            return (
-              <div className="acard" key={avatar.id}>
-                <div
-                  className="athumb"
-                  style={
-                    avatar.thumbnailImageUrl
-                      ? { backgroundImage: cssUrl(avatar.thumbnailImageUrl) }
-                      : undefined
-                  }
-                >
-                  {avatar.releaseStatus &&
-                    (REL_ICONS[avatar.releaseStatus] ? (
-                      <span
-                        className={`arel arel--icon ${avatar.releaseStatus}`}
-                        role="img"
-                        aria-label={avatar.releaseStatus}
-                        title={avatar.releaseStatus}
-                      >
-                        <Icon name={REL_ICONS[avatar.releaseStatus]} size={13} />
-                      </span>
-                    ) : (
-                      <span className="arel">{avatar.releaseStatus}</span>
-                    ))}
-                </div>
-                <div className="abody">
-                  <div className="aname">{avatar.name || "（名前なし）"}</div>
-                  {avatar.platforms.length > 0 && (
-                    <div className="aplats">
-                      {avatar.platforms.map((p) => (
-                        <span className="aplat" key={p.platform}>
-                          {platformLabel(p.platform)}
-                          {p.performanceRating ? ` · ${p.performanceRating}` : ""}
-                        </span>
-                      ))}
+
+        <section className="wsec">
+          <h3 className="wsec-title">自分のアバター ({avatars.length})</h3>
+          <div className={`agrid view-${viewMode}`}>
+            {avatars.map((avatar) => {
+              const worn = currentAvatarId === avatar.id;
+              const busy = busyId === avatar.id;
+              return (
+                <div className="acard" key={avatar.id}>
+                  <div
+                    className="athumb"
+                    style={
+                      avatar.thumbnailImageUrl
+                        ? { backgroundImage: cssUrl(avatar.thumbnailImageUrl) }
+                        : undefined
+                    }
+                  >
+                    {worn ? <WornBadge /> : null}
+                    <ReleaseBadge releaseStatus={avatar.releaseStatus} />
+                  </div>
+                  <div className="abody">
+                    <div className="aname">{avatar.name || "（名前なし）"}</div>
+                    {avatar.platforms.length > 0 && (
+                      <div className="aplats">
+                        {avatar.platforms.map((p) => (
+                          <span className="aplat" key={p.platform}>
+                            {platformLabel(p.platform)}
+                            {p.performanceRating ? ` · ${p.performanceRating}` : ""}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {avatar.description && <div className="adesc">{avatar.description}</div>}
+                    <div className="ameta">
+                      {avatar.version != null && <span className="aver">v{avatar.version}</span>}
+                      <span className="adate">{fmtDate(avatar.updatedAt)}</span>
                     </div>
-                  )}
-                  {avatar.description && <div className="adesc">{avatar.description}</div>}
-                  <div className="ameta">
-                    {avatar.version != null && <span className="aver">v{avatar.version}</span>}
-                    <span className="adate">{fmtDate(avatar.updatedAt)}</span>
-                  </div>
-                  {/* Always visible (not hover-only) so touch devices can discover
+                    {/* Always visible (not hover-only) so touch devices can discover
                       these affordances, matching the print gallery's .meta convention. */}
-                  <div className="aactions">
-                    <button
-                      type="button"
-                      className="aactbtn"
-                      disabled={busy}
-                      onClick={() => setImageModalAvatarId(avatar.id)}
-                    >
-                      画像を変更
-                    </button>
-                    <button
-                      type="button"
-                      className="aactbtn danger"
-                      disabled={busy}
-                      onClick={() => handleDelete(avatar)}
-                    >
-                      {busy ? "削除中…" : "削除"}
-                    </button>
+                    <div className="aactions">
+                      <button
+                        type="button"
+                        className="aactbtn"
+                        disabled={busy || worn}
+                        onClick={() => handleSwitch(avatar.id, avatar.name)}
+                      >
+                        {busy ? "着替え中…" : worn ? "着用中" : "着替える"}
+                      </button>
+                      <button
+                        type="button"
+                        className="aactbtn"
+                        disabled={busy}
+                        onClick={() => setImageModalAvatarId(avatar.id)}
+                      >
+                        画像を変更
+                      </button>
+                      <button
+                        type="button"
+                        className="aactbtn danger"
+                        disabled={busy}
+                        onClick={() => handleDelete(avatar)}
+                      >
+                        {busy ? "削除中…" : "削除"}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="wsec">
+          <h3 className="wsec-title">お気に入り ({favoriteAvatars.length})</h3>
+          {favoriteSections.length === 0 ? (
+            <p className="mstatus">お気に入りアバターはありません。</p>
+          ) : (
+            favoriteSections.map((section) => (
+              <FavoriteAvatarSection
+                key={section.key}
+                displayName={section.displayName}
+                avatars={section.avatars}
+                currentAvatarId={currentAvatarId}
+                busyId={busyId}
+                onSwitch={(avatar) => handleSwitch(avatar.id, avatar.name)}
+              />
+            ))
+          )}
+        </section>
       </section>
       {imageModalAvatarId ? (
         <AvatarImageModal

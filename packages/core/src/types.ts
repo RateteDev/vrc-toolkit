@@ -60,6 +60,26 @@ export interface VRChatWorld {
   favoriteId?: string;
 }
 
+// GET /avatars/favorites entry: a full avatar object (unlike the minimal
+// RawListAvatar returned by GET /avatars), carrying favoriteGroup/favoriteId
+// like a world favorite entry, plus author identity for display.
+export interface VRChatAvatar {
+  id?: string;
+  name?: string;
+  description?: string;
+  authorId?: string;
+  authorName?: string;
+  releaseStatus?: string;
+  thumbnailImageUrl?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  version?: number;
+  unityPackages?: Array<{ platform?: string; performanceRating?: string | null }>;
+  // Only present on GET /avatars/favorites entries.
+  favoriteGroup?: string;
+  favoriteId?: string;
+}
+
 // GET /favorite/groups returns one entry per favorite group across ALL
 // favorite types (avatar/world/friend), not just worlds; callers filter by
 // `type`. `name` is the fixed slot id (worlds1..worlds4 for world groups);

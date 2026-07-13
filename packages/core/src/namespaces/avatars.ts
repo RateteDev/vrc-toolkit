@@ -1,7 +1,9 @@
-// Avatars namespace: list, update, and delete the account owner's avatars.
+// Avatars namespace: list, update, delete, and switch the account owner's
+// avatars, plus the account owner's favorite avatars.
 
 import { VrcResource } from "../resource";
-import { buildQuery, PAGE_SIZE, paginateAll } from "./_shared";
+import type { AuthUserResponse, VRChatAvatar } from "../types";
+import { buildQuery, PAGE_SIZE, paginateAll, paginateAllGuarded } from "./_shared";
 
 // Raw avatar object from GET /avatars in list form (snake_case timestamps, no
 // top-level assetUrl). Only fields we surface are typed.
@@ -71,6 +73,31 @@ export class AvatarsResource extends VrcResource {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+    });
+  }
+
+  // GET /avatars/favorites?n=100&offset={k}, paged to exhaustion. Mirrors
+  // WorldsResource.favorites: the guarded paginator defends against a future
+  // silent regression to an ignored offset. favoriteId (unique per favorite
+  // entry) is preferred as the dedup key over id (avatarId), which is not
+  // guaranteed unique across favorite groups.
+  favorites(): Promise<VRChatAvatar[]> {
+    return paginateAllGuarded(
+      PAGE_SIZE,
+      (offset) =>
+        this.requestArray<VRChatAvatar>(
+          `/avatars/favorites${buildQuery({ n: PAGE_SIZE, offset })}`,
+        ),
+      (a) => a.favoriteId ?? a.id,
+    );
+  }
+
+  // PUT /avatars/{avatarId}/select — wears the avatar. Returns the current-user
+  // object (currentAvatar reflects the new selection). A user-initiated,
+  // one-shot write per the unofficial-API policy: no polling, no retries.
+  select(avatarId: string): Promise<AuthUserResponse | null> {
+    return this.request<AuthUserResponse>(`/avatars/${encodeURIComponent(avatarId)}/select`, {
+      method: "PUT",
     });
   }
 }

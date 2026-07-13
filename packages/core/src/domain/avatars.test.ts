@@ -2,7 +2,8 @@
 // itself lives in namespaces/_shared.ts, outside the domain layer.
 
 import { describe, expect, it } from "bun:test";
-import { fmtAvatar, type RawAvatar } from "./avatars";
+import type { VRChatFavoriteGroup } from "../types";
+import { avatarFavoriteGroups, fmtAvatar, fmtFavoriteAvatar, type RawAvatar } from "./avatars";
 
 describe("fmtAvatar", () => {
   it("absorbs snake_case updated_at into camelCase updatedAt", () => {
@@ -94,5 +95,65 @@ describe("fmtAvatar", () => {
 
   it("returns an empty platforms array when unityPackages is absent", () => {
     expect(fmtAvatar({}).platforms).toEqual([]);
+  });
+});
+
+describe("fmtFavoriteAvatar", () => {
+  it("narrows a raw favorite avatar into AvatarSummary plus authorName/favoriteGroup/favoriteId", () => {
+    const s = fmtFavoriteAvatar({
+      id: "avtr_1",
+      name: "My Avatar",
+      releaseStatus: "public",
+      authorName: "author-a",
+      favoriteGroup: "avatars1",
+      favoriteId: "fav_1",
+      updated_at: "2025-02-02T00:00:00.000Z",
+    });
+    expect(s).toEqual({
+      id: "avtr_1",
+      name: "My Avatar",
+      releaseStatus: "public",
+      thumbnailImageUrl: null,
+      updatedAt: "2025-02-02T00:00:00.000Z",
+      description: "",
+      version: null,
+      createdAt: "",
+      platforms: [],
+      authorName: "author-a",
+      favoriteGroup: "avatars1",
+      favoriteId: "fav_1",
+    });
+  });
+
+  it("defaults authorName/favoriteGroup/favoriteId to empty strings when absent", () => {
+    const s = fmtFavoriteAvatar({});
+    expect(s.authorName).toBe("");
+    expect(s.favoriteGroup).toBe("");
+    expect(s.favoriteId).toBe("");
+  });
+});
+
+describe("avatarFavoriteGroups", () => {
+  it("keeps only type=avatar groups, sorted by name", () => {
+    const raw: VRChatFavoriteGroup[] = [
+      { name: "avatars3", displayName: "avatars3", type: "avatar", visibility: "private" },
+      { name: "worlds1", displayName: "worlds1", type: "world", visibility: "private" },
+      { name: "avatars1", displayName: "お気に入り", type: "avatar", visibility: "friends" },
+      { name: "friends1", displayName: "friends1", type: "friend", visibility: "private" },
+    ];
+    expect(avatarFavoriteGroups(raw)).toEqual([
+      { name: "avatars1", displayName: "お気に入り", visibility: "friends" },
+      { name: "avatars3", displayName: "avatars3", visibility: "private" },
+    ]);
+  });
+
+  it("falls back displayName to name when displayName is empty", () => {
+    expect(avatarFavoriteGroups([{ name: "avatars2", displayName: "", type: "avatar" }])).toEqual([
+      { name: "avatars2", displayName: "avatars2", visibility: "" },
+    ]);
+  });
+
+  it("returns [] for an empty input", () => {
+    expect(avatarFavoriteGroups([])).toEqual([]);
   });
 });

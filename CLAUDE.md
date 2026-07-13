@@ -7,7 +7,7 @@
 Monorepo structure:
 
 - `apps/` — Application entry points
-    - `apps/extension`（未着手・主力）— ブラウザ拡張（MV3）。ユーザー自身の `vrchat.com` セッションに相乗りして API を呼び出し、認証情報は一切保持しない。
+    - `apps/extension`（開発中・主力）— ブラウザ拡張（Chrome MV3 / Firefox MV2）。ユーザー自身の `vrchat.com` セッションに相乗りして API を呼び出し、認証情報は一切保持しない。
     - `apps/cli`（未着手・低優先度）— コマンドライン版。
     - `apps/mcp`（未着手・低優先度）— MCP サーバー版。
 - `packages/` — Shared libraries and internal packages

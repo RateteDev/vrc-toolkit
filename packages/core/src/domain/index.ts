@@ -6,6 +6,7 @@ export * from "./avatars";
 export * from "./crop";
 export * from "./dates";
 export * from "./friends";
+export * from "./groups";
 export * from "./images";
 export * from "./instances";
 export * from "./notes";

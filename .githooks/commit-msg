@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+msg_file="$1"
+subject="$(sed -n '1p' "$msg_file")"
+char_count="$(wc -m < "$msg_file")"
+
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
+    subject_pattern='^.+ をマージ: .+$'
+    required_headings=("## サマリー" "## 含まれる変更" "## 残課題")
+else
+    subject_pattern='^\[[^]]+\](feat|fix|refactor|docs|chore): .+$'
+    required_headings=("## 背景" "## 変更サマリー" "## 効果・影響")
+fi
+
+if ! [[ "$subject" =~ $subject_pattern ]]; then
+    echo "commit-msg: subject does not match the required format: $subject" >&2
+    echo "  see docs/guides/commit-messages.md (件名フォーマット)" >&2
+    exit 1
+fi
+
+for heading in "${required_headings[@]}"; do
+    if ! grep -qF "$heading" "$msg_file"; then
+        echo "commit-msg: missing required heading '$heading' in body" >&2
+        echo "  see docs/guides/commit-messages.md (本文構成)" >&2
+        exit 1
+    fi
+done
+
+limit=500
+if [ "$char_count" -gt "$limit" ]; then
+    echo "commit-msg: message is ${char_count} chars, exceeds the ${limit} char limit" >&2
+    echo "  do not shave connectives/particles or paraphrase to fit; cut low-priority information instead" >&2
+    echo "  see docs/guides/commit-messages.md (作成ルール)" >&2
+    exit 1
+fi
+
+exit 0

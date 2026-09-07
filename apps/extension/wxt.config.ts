@@ -6,6 +6,11 @@ import { defineConfig } from "wxt";
 // credentials of its own.
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
+  zip: {
+    // 既定では package.json の名前に由来し vrc-toolkitextension となるため、
+    // リリース成果物の名を vrc-toolkit-{version}-{browser}.zip へ統一する
+    name: "vrc-toolkit",
+  },
   manifest: {
     name: "VRC Toolkit",
     description: "VRChat の非公式 API を利用した個人向けツールキット。",
